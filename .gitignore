@@ -1,0 +1,2 @@
+# Ignore the config.php as it will be created by the installer
+config.php
