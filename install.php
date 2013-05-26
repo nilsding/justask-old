@@ -42,6 +42,11 @@ case "justask_values":
 <td class="info">This is the name used along the site.</td>
 </tr>
 <tr>
+<td><label for="jak_entriesperpage">Max. entries per page:</label></td>
+<td><input type="number" name="jak_entriesperpage" value="10"></td>
+<td class="info">How many questions/answers will be shown on each page?</td>
+</tr>
+<tr>
 <td><label for="jak_gravatar">Enable Gravatar:</label></td>
 <td><input type="checkbox" name="jak_gravatar" checked></td>
 <td class="info">Allow people to use their Gravatar email address as a profile picture.</td>
@@ -74,6 +79,17 @@ if (!isset($_GET['jak_name'])) { /* who would do this? */
     $_SESSION['jak_name'] = 'An instance of justask without a name';
   } else {
     $_SESSION['jak_name'] = $_GET['jak_name'];
+  }
+}
+if (!isset($_GET['jak_entriesperpage'])) {
+  $_SESSION['jak_entriesperpage'] = 10;
+} else {
+  $_SESSION['jak_entriesperpage'] = $_GET['jak_entriesperpage'];
+  if (!is_numeric($_SESSION['jak_entriesperpage'])) { /* ... */
+    $_SESSION['jak_entriesperpage'] = 10;
+  }
+  if ($_SESSION['jak_entriesperpage'] < 1) { /* ............ */
+    $_SESSION['jak_entriesperpage'] = 10;
   }
 }
 ?>
@@ -109,7 +125,7 @@ if (!isset($_GET['jak_name'])) { /* who would do this? */
 case "finish_1": ?>
 <h2>Finalizing (part 1)</h2>
 <?php
-if (!isset($_SESSION['jak_name']) || !isset($_SESSION['jak_gravatar']) || !isset($_SESSION['jak_anonymous_questions'])) {
+if (!isset($_SESSION['jak_name']) || !isset($_SESSION['jak_gravatar']) || !isset($_SESSION['jak_anonymous_questions']) || !isset($_SESSION['jak_entriesperpage'])) {
   ?>
 <form action="install.php">
 <p>Illegal action. Go back to start, do not pass go, do not collect 200$.</p>
@@ -194,7 +210,7 @@ case "finish_2": ?>
     echo "<p>The error was: (" . $sql->errno . ") " . $sql->error . "</p>";
   }
   
-  $sql_str = 'INSERT INTO `' . $MYSQL_TABLE_PREFIX . 'config` (`config_id`, `config_value`) VALUES (\'cfg_sitename\', \'' . $sql->real_escape_string($_SESSION['jak_name']) . '\'), (\'cfg_gravatar\', \'' . ($_SESSION['jak_gravatar'] ? "true" : "false") . '\'), (\'cfg_anon_questions\', \'' . ($_SESSION['jak_anonymous_questions'] ? "true" : "false") . '\');';
+  $sql_str = 'INSERT INTO `' . $MYSQL_TABLE_PREFIX . 'config` (`config_id`, `config_value`) VALUES (\'cfg_sitename\', \'' . $sql->real_escape_string($_SESSION['jak_name']) . '\'), (\'cfg_gravatar\', \'' . ($_SESSION['jak_gravatar'] ? "true" : "false") . '\'), (\'cfg_anon_questions\', \'' . ($_SESSION['jak_anonymous_questions'] ? "true" : "false") . '\'), (\'cfg_max_entries\', \'' . $_SESSION['jak_entriesperpage'] . '\');';
   
   if (!$sql->query($sql_str)) {
     if ($sql->errno != 1062) { // errno 1062 = Duplicate entry 'blah' for key 'PRIMARY'
@@ -214,6 +230,12 @@ case "finish_2": ?>
       }
       
       $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . ($_SESSION['jak_anonymous_questions'] ? "true" : "false"). '\' WHERE `config_id`=\'cfg_anon_questions\';';
+      if (!$sql->query($sql_str)) {
+        echo "<p>The query <code>$sql_str</code> failed! :(</p>";
+        echo "<p>The error was: (" . $sql->errno . ") " . $sql->error . "</p>";
+      }
+      
+      $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . $_SESSION['jak_entriesperpage']. '\' WHERE `config_id`=\'cfg_max_entries\';';
       if (!$sql->query($sql_str)) {
         echo "<p>The query <code>$sql_str</code> failed! :(</p>";
         echo "<p>The error was: (" . $sql->errno . ") " . $sql->error . "</p>";

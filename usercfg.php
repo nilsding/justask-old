@@ -88,6 +88,17 @@ if (isset($_GET['change'])) {
           $jak_name = $_POST['jak_name'];
         }
       }
+      if (!isset($_POST['jak_entriesperpage'])) {
+        $jak_entriesperpage = 10;
+      } else {
+        $jak_entriesperpage = $_POST['jak_entriesperpage'];
+        if (!is_numeric($jak_entriesperpage)) { /* ... */
+          $jak_entriesperpage = 10;
+        }
+        if ($jak_entriesperpage < 1) { /* ............ */
+          $jak_entriesperpage = 10;
+        }
+      }
       
       $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . $sql->real_escape_string($jak_name) . '\' WHERE `config_id`=\'cfg_sitename\'; ';
 //       if (!$sql->query($sql_str)) {
@@ -98,6 +109,15 @@ if (isset($_GET['change'])) {
       $sql->query($sql_str);
       $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . ($jak_anonymous_questions ? "true" : "false"). '\' WHERE `config_id`=\'cfg_anon_questions\';';
       $sql->query($sql_str);
+      
+      $sql_str = 'INSERT INTO `' . $MYSQL_TABLE_PREFIX . 'config` (`config_id`, `config_value`) VALUES (\'cfg_max_entries\', \'' . $jak_entriesperpage . '\');';
+      if (!$sql->query($sql_str)) {
+        if ($sql->errno == 1062) {
+          $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . $jak_entriesperpage . '\' WHERE `config_id`=\'cfg_max_entries\';';
+          $sql->query($sql_str);
+        }
+      }
+      
       
       header('Location: usercfg.php?p=account');
       break;
@@ -152,7 +172,22 @@ $question_count = $res->num_rows;
 
 $res = $sql->query('SELECT * FROM `' . $MYSQL_TABLE_PREFIX . 'answers`');
 $answer_count = $res->num_rows;
+$res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_max_entries\'');
+$res = $res->fetch_assoc();
+if (!is_numeric($res['config_value'])) {
+  $max_entries_per_page = 10;
+} else {
+  $max_entries_per_page = (int) $res['config_value'];
+}
 
+if (!isset($_GET['page'])) {
+  $pagenum = 1;
+} else {
+  $pagenum = (int) $_GET['page'];
+}
+if ($pagenum < 1) {
+  $pagenum = 1;
+}
 ?>
 <!DOCTYPE html>
 <html>
@@ -238,6 +273,15 @@ switch ($m) {
 }
 
 $res = $sql->query('SELECT * FROM `' . $MYSQL_TABLE_PREFIX . 'inbox` ORDER BY `question_timestamp` DESC');
+
+$last_page = ceil($res->num_rows / $max_entries_per_page); 
+if ($pagenum > $last_page) {
+  $pagenum = $last_page;
+}
+$max_sql_str_part_thing = ' LIMIT ' . ($pagenum - 1) * $max_entries_per_page . ',' . $max_entries_per_page; 
+
+$res = $sql->query('SELECT * FROM `' . $MYSQL_TABLE_PREFIX . 'inbox` ORDER BY `question_timestamp` DESC' . $max_sql_str_part_thing);
+
 while ($question = $res->fetch_assoc()) { 
 $question_time_asked = strtotime($question['question_timestamp']);
 if ($question['asker_private']) {
@@ -263,6 +307,23 @@ if ($question['asker_private']) {
 </form>
 <?php
 } ?>
+<!-- Begin page numbering thing -->
+<div class="pages">
+<ul class="pages_list">
+<?php if ($pagenum > 1) { /* are we not on the first page? */ ?>
+<li><a href="<?php echo $_SERVER['PHP_SELF'] . '?p=inbox&page=1' ?>">«</a></li>
+<li><a href="<?php echo $_SERVER['PHP_SELF'] . '?p=inbox&page=' . ($pagenum == 1 ? 1 : $pagenum - 1); ?>">‹</a></li>
+<?php } 
+for ($i = 1; $i <= $last_page; $i++) {
+  ?><li><a href="<?php echo $_SERVER['PHP_SELF'] . '?p=inbox&page=' . $i; if ($pagenum == $i) echo '" class="current-page'; ?>"><?php echo $i; ?></a></li><?php
+}
+if ($pagenum < $last_page) { /* are we not on the last page */ ?>
+<li><a href="<?php echo $_SERVER['PHP_SELF'] . '?p=inbox&page=' . ($pagenum == $last_page ? $last_page : $pagenum + 1); ?>">›</a></li>
+<li><a href="<?php echo $_SERVER['PHP_SELF'] . '?p=inbox&page=' . $last_page; ?>">»</a></li>
+<?php } ?>
+</ul>
+</div>
+<!-- End page numbering thing -->
 <?php
 }
     break;
@@ -275,10 +336,8 @@ if (!isset($_GET['m'])) {
 }
 /* messages:
  *  0 - don't show a message
- *  1 - successfully deleted question
- *  2 - successfully answered question
- *  3 - you have to write an answer
- *  4 - internal error
+ *  1 - successfully deleted answer
+ *  2 - internal error
  */
 
   if ($answer_count == 0) { ?>
@@ -296,6 +355,15 @@ switch ($m) {
   default:
 }
 $res = $sql->query('SELECT * FROM `' . $MYSQL_TABLE_PREFIX . 'answers` ORDER BY `answer_timestamp` DESC');
+
+$last_page = ceil($res->num_rows / $max_entries_per_page); 
+if ($pagenum > $last_page) {
+  $pagenum = $last_page;
+}
+$max_sql_str_part_thing = ' LIMIT ' . ($pagenum - 1) * $max_entries_per_page . ',' . $max_entries_per_page; 
+
+$res = $sql->query('SELECT * FROM `' . $MYSQL_TABLE_PREFIX . 'answers` ORDER BY `answer_timestamp` DESC' . $max_sql_str_part_thing);
+
 while ($question = $res->fetch_assoc()) { 
 $question_time_answered = strtotime($question['answer_timestamp']);
 if ($question['asker_private']) {
@@ -321,6 +389,25 @@ if ($question['asker_private']) {
 <input type="hidden" name="question_id" value="<?php echo $question['answer_id']; ?>">
 </form>
 <?php }
+?>
+<!-- Begin page numbering thing -->
+<div class="pages">
+<ul class="pages_list">
+<?php if ($pagenum > 1) { /* are we not on the first page? */ ?>
+<li><a href="<?php echo $_SERVER['PHP_SELF'] . '?p=answers&page=1' ?>">«</a></li>
+<li><a href="<?php echo $_SERVER['PHP_SELF'] . '?p=answers&page=' . ($pagenum == 1 ? 1 : $pagenum - 1); ?>">‹</a></li>
+<?php } 
+for ($i = 1; $i <= $last_page; $i++) {
+  ?><li><a href="<?php echo $_SERVER['PHP_SELF'] . '?p=answers&page=' . $i; if ($pagenum == $i) echo '" class="current-page'; ?>"><?php echo $i; ?></a></li><?php
+}
+if ($pagenum < $last_page) { /* are we not on the last page */ ?>
+<li><a href="<?php echo $_SERVER['PHP_SELF'] . '?p=answers&page=' . ($pagenum == $last_page ? $last_page : $pagenum + 1); ?>">›</a></li>
+<li><a href="<?php echo $_SERVER['PHP_SELF'] . '?p=answers&page=' . $last_page; ?>">»</a></li>
+<?php } ?>
+</ul>
+</div>
+<!-- End page numbering thing -->
+<?php
   }
     break;
   
@@ -346,6 +433,11 @@ $anon_questions = ($res['config_value'] === 'true' ? true : false);
 <td><label for="jak_name">Name:</label></td>
 <td><input type="text" name="jak_name" value="<?php echo $site_name ?>"></td>
 <td class="info">This is the name used along the site.</td>
+</tr>
+<tr>
+<td><label for="jak_entriesperpage">Max. entries per page:</label></td>
+<td><input type="number" name="jak_entriesperpage" value="<?php echo $max_entries_per_page; ?>"></td>
+<td class="info">How many questions/answers will be shown on each page?</td>
 </tr>
 <tr>
 <td><label for="jak_gravatar">Enable Gravatar:</label></td>

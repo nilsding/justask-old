@@ -135,6 +135,33 @@ div.question-timestamp {
   display: inline;
 }
 
+/* pagination */
+
+ul.pages_list {
+  margin: 0px;
+  padding: 0px;
+  list-style-type: none;
+}
+
+ul.pages_list li {
+  margin-left: 2px;
+  margin-right: 2px;
+  display: inline-block;
+}
+
+ul.pages_list li a {
+  color: #0b95ff;
+  text-decoration: none;
+}
+
+ul.pages_list li a:hover {
+  color: #1b51ad;
+}
+
+.current-page {
+  font-weight: bold;
+}
+  
 /* usercfg.php specific definitions */
 
 ul.user-menu {

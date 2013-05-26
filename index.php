@@ -32,6 +32,22 @@ $user_name = $res['config_value'];
 $res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_user_gravatar\'');
 $res = $res->fetch_assoc();
 $user_gravatar_email = $res['config_value'];
+$res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_max_entries\'');
+$res = $res->fetch_assoc();
+if (!is_numeric($res['config_value'])) {
+  $max_entries_per_page = 10;
+} else {
+  $max_entries_per_page = (int) $res['config_value'];
+}
+
+if (!isset($_GET['page'])) {
+  $pagenum = 1;
+} else {
+  $pagenum = (int) $_GET['page'];
+}
+if ($pagenum < 1) {
+  $pagenum = 1;
+}
 
 if (!isset($_GET['message'])) {
   $message = '0';
@@ -105,6 +121,15 @@ default: ?>
 <!-- Begin answers -->
 <?php 
 $res = $sql->query('SELECT * FROM `' . $MYSQL_TABLE_PREFIX . 'answers` ORDER BY `answer_timestamp` DESC');
+
+$last_page = ceil($res->num_rows / $max_entries_per_page); 
+if ($pagenum > $last_page) {
+  $pagenum = $last_page;
+}
+$max_sql_str_part_thing = ' LIMIT ' . ($pagenum - 1) * $max_entries_per_page . ',' . $max_entries_per_page; 
+
+$res = $sql->query('SELECT * FROM `' . $MYSQL_TABLE_PREFIX . 'answers` ORDER BY `answer_timestamp` DESC' . $max_sql_str_part_thing);
+
 while ($question = $res->fetch_assoc()) { 
 $question_time_answered = strtotime($question['answer_timestamp']);
 if ($question['asker_private']) {
@@ -127,6 +152,23 @@ if ($question['asker_private']) {
 </div>
 <?php } ?>
 <!-- End answers -->
+<!-- Begin page numbering thing -->
+<div class="pages">
+<ul class="pages_list">
+<?php if ($pagenum > 1) { /* are we not on the first page? */ ?>
+<li><a href="<?php echo $_SERVER['PHP_SELF'] . '?page=1' ?>">«</a></li>
+<li><a href="<?php echo $_SERVER['PHP_SELF'] . '?page=' . ($pagenum == 1 ? 1 : $pagenum - 1); ?>">‹</a></li>
+<?php } 
+for ($i = 1; $i <= $last_page; $i++) {
+  ?><li><a href="<?php echo $_SERVER['PHP_SELF'] . '?page=' . $i; if ($pagenum == $i) echo '" class="current-page'; ?>"><?php echo $i; ?></a></li><?php
+}
+if ($pagenum < $last_page) { /* are we not on the last page */ ?>
+<li><a href="<?php echo $_SERVER['PHP_SELF'] . '?page=' . ($pagenum == $last_page ? $last_page : $pagenum + 1); ?>">›</a></li>
+<li><a href="<?php echo $_SERVER['PHP_SELF'] . '?page=' . $last_page; ?>">»</a></li>
+<?php } ?>
+</ul>
+</div>
+<!-- End page numbering thing -->
 <hr />
 <div class="footer">
 <p style="font-size: small;"><?php echo htmlspecialchars($site_name); ?> is running <a href="https://github.com/nilsding/justask">justask</a>, which is
