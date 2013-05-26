@@ -232,8 +232,8 @@ switch ($page) {
   default:
   case 'front':
 ?>
-<p>This text is a filler text.</p>
-<p>I will probably add stats here in a future update.</p>
+<p><b>Welcome to justask, <?php echo $_SESSION['user'] ?>!</b></p>
+<p>So far, you have answered <?php echo $answer_count == 0 ? "no" : ($answer_count == 1 ? "one" : $answer_count); ?> question<?php echo $answer_count != 1 ? "s" : ""; ?>!</p>
 <?php
     break;
   
