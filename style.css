@@ -118,6 +118,7 @@ div.question img.asker-gravatar {
 
 div.question-text {
   display: inline-block;
+  width: 440px;
 }
 
 div.question-user-asked, div.question-user-answered {
