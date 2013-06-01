@@ -70,7 +70,7 @@ if (strlen($question_asked_by) > 100) {
 }
 
 
-$sql_str = 'INSERT INTO `' . $MYSQL_TABLE_PREFIX . 'inbox` (`question_content`, `asker_name`, `asker_gravatar`, `asker_private`) VALUES (\'' . $question . '\', \'' . $question_asked_by . '\', \'' . $gravatar_address . '\', \'' . $question_asked_anonymously . '\')';
+$sql_str = 'INSERT INTO `' . $MYSQL_TABLE_PREFIX . 'inbox` (`question_content`, `asker_name`, `asker_gravatar`, `asker_private`) VALUES (\'' . $question . '\', \'' . $question_asked_by . '\', \'' . $gravatar_address . '\', \'' . ($question_asked_anonymously ? '1' : '0') . '\')';
 
 if (!$sql->query($sql_str)) {
   echo "<p>The query <code>$sql_str</code> failed! :(</p>";
