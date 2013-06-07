@@ -175,6 +175,10 @@ div.question-timestamp {
   display: inline;
 }
 
+div.question-actions span.question-actions-right {
+  float: right;
+}
+
 /* pagination */
 
 ul.pages_list {
@@ -202,7 +206,7 @@ ul.pages_list li a:hover {
   font-weight: bold;
 }
   
-/* usercfg.php specific definitions */
+/* ucp.php specific definitions */
 
 ul.user-menu {
   margin: 0px;

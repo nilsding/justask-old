@@ -16,7 +16,7 @@ Oh, and IIS is horrible. Don't try this at home.
 ## Installation
 Before you ask "hurrrr wher is z config.php", I would recommend you to take a look at the install.php. It will generate a
 `config.php` for you and even does all the SQL stuff (creating tables and so on…). After finished installing, be sure to
-delete the `install.php` and edit your login data using the `usercfg.php`. The default user name is "user" and the default
+delete the `install.php` and edit your login data using the `ucp.php`. The default user name is "user" and the default
 password is "password".
 
 ## Upgrading
