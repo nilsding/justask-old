@@ -45,7 +45,7 @@ switch ($config_version) {
      * version = config version number
      * cfg_twitter = twitter enabled? [true/false]
      * cfg_twitter_ck = twitter consumer key
-     * cfg_twitter_ck = twitter consumer secret
+     * cfg_twitter_cs = twitter consumer secret
      * cfg_twitter_at = twitter consumer access token
      * cfg_twitter_ats = twitter consumer access token secret
      * cfg_twitter_callbk = twitter callback
