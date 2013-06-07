@@ -239,11 +239,15 @@ if (!isset($_GET['m'])) {
 /* messages:
  *  0 - don't show a message
  *  1 - what the f- happened?
+ *  2 - usercfg was renamed
  */
 
 switch ($m) {
   case '1':
     ?><p class="message">What the f- happened?</p><?php
+    break;
+  case '2':
+    ?><p class="message"><code>usercfg.php</code> was renamed to <code>ucp.php</code>, please update your bookmarks!</p><?php
     break;
   case '0':
   default:
