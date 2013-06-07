@@ -22,20 +22,20 @@ if (isset($_GET['change'])) {
   switch ($_GET['change']) {
     case 'logindata':
       if (!isset($_SESSION['logged_in']) || !isset($_SESSION['user'])) {
-        header('Location: usercfg.php');
+        header('Location: ucp.php');
         exit();
       }
       if (!isset($_POST['username']) || !isset($_POST['passwd'])) {
-        header('Location: usercfg.php?p=account');
+        header('Location: ucp.php?p=account');
         exit();
       }
       
       if ($_POST['username'] === '') {
-        header('Location: usercfg.php?p=account');
+        header('Location: ucp.php?p=account');
         exit();
       }
       if ($_POST['passwd'] === '') {
-        header('Location: usercfg.php?p=account');
+        header('Location: ucp.php?p=account');
         exit();
       }
       
@@ -45,26 +45,26 @@ if (isset($_GET['change'])) {
       $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . crypt($_POST['passwd'], '$2a$07$ifthisstringhasmorecharactersdoesitmakeitmoresecurequestionmark666$') . '\' WHERE `config_id`=\'cfg_password\'';
       $sql->query($sql_str);
       
-      header('Location: usercfg.php?p=account');
+      header('Location: ucp.php?p=account');
       break;
     case 'userdetails':
       if (!isset($_SESSION['logged_in']) || !isset($_SESSION['user'])) {
-        header('Location: usercfg.php');
+        header('Location: ucp.php');
         exit();
       }
       if (!isset($_POST['gravatar_email'])) {
-        header('Location: usercfg.php?p=account');
+        header('Location: ucp.php?p=account');
         exit();
       }
       
       $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . $sql->real_escape_string($_POST['gravatar_email']) . '\' WHERE `config_id`=\'cfg_user_gravatar\'';
       $sql->query($sql_str);
       
-      header('Location: usercfg.php?p=account');
+      header('Location: ucp.php?p=account');
       break;
     case 'justask':
       if (!isset($_SESSION['logged_in']) || !isset($_SESSION['user'])) {
-        header('Location: usercfg.php');
+        header('Location: ucp.php');
         exit();
       }
       
@@ -119,10 +119,10 @@ if (isset($_GET['change'])) {
       }
       
       
-      header('Location: usercfg.php?p=account');
+      header('Location: ucp.php?p=account');
       break;
   }
-//   header('Location: usercfg.php');
+//   header('Location: ucp.php');
   exit();
 }
 
@@ -200,7 +200,7 @@ if ($pagenum < 1) {
 <h1>User control panel</h1>
 <?php if (!isset($_SESSION['logged_in'])) { ?>
 <p>You may want to log in.</p>
-<form method="POST" action="usercfg.php">
+<form method="POST" action="ucp.php">
 <input type="text" name="username" placeholder="User name"><br />
 <input type="password" name="passwd" placeholder="Password"><br />
 <button>Log in</button>
@@ -213,11 +213,11 @@ else if ($_SESSION['logged_in'] === true) {
     $page = $_GET['p'];
   } ?>
 <ul class="user-menu">
-<li><a href="usercfg.php?p=front">Main page</a></li>
-<li><a href="usercfg.php?p=inbox">Inbox<?php if ($question_count > 0) echo ' <span class="menu-counter">' . $question_count . '</span>'; ?></a></li>
-<li><a href="usercfg.php?p=answers">Answers</a></li>
-<li><a href="usercfg.php?p=account">Settings<?php if ($shouldchangepassanduser) echo ' <span class="menu-important">!</span>'; ?></a></li>
-<li><a href="usercfg.php?p=logout">Logout</a></li>
+<li><a href="ucp.php?p=front">Main page</a></li>
+<li><a href="ucp.php?p=inbox">Inbox<?php if ($question_count > 0) echo ' <span class="menu-counter">' . $question_count . '</span>'; ?></a></li>
+<li><a href="ucp.php?p=answers">Answers</a></li>
+<li><a href="ucp.php?p=account">Settings<?php if ($shouldchangepassanduser) echo ' <span class="menu-important">!</span>'; ?></a></li>
+<li><a href="ucp.php?p=logout">Logout</a></li>
 </ul>
 <!--<p><img src="<?php echo get_gravatar_url($user_gravatar_email, 48); ?>" alt="Your profile picture" />
 Logged in as <?php echo $_SESSION['user']; ?></p> -->
@@ -247,7 +247,7 @@ switch ($m) {
     ?><p class="message">What the f- happened?</p><?php
     break;
   case '2':
-    ?><p class="message"><code>usercfg.php</code> was renamed to <code>ucp.php</code>, please update your bookmarks!</p><?php
+    ?><p class="message"><code>ucp.php</code> was renamed to <code>ucp.php</code>, please update your bookmarks!</p><?php
     break;
   case '0':
   default:
@@ -441,14 +441,14 @@ $res = $res->fetch_assoc();
 $anon_questions = ($res['config_value'] === 'true' ? true : false);
 ?>
 <h2>User details</h2>
-<form method="POST" action="usercfg.php?change=userdetails">
+<form method="POST" action="ucp.php?change=userdetails">
 <label for="gravatar_email">Gravatar email address: </label><input type="text" name="gravatar_email" placeholder="Gravatar email address" value="<?php echo $user_gravatar_email; ?>">
 <button>Save</button>
 </form>
 
 <h2>justask settings</h2>
 <p>These are settings for justask.</p>
-<form method="POST" action="usercfg.php?change=justask">
+<form method="POST" action="ucp.php?change=justask">
 <table>
 <tr>
 <td><label for="jak_name">Name:</label></td>
@@ -476,7 +476,7 @@ $anon_questions = ($res['config_value'] === 'true' ? true : false);
 
 <h2<?php if ($shouldchangepassanduser) echo ' class="should_change"'; ?>>Login details</h2>
 <p>Change your username and password here.</p>
-<form method="POST" action="usercfg.php?change=logindata">
+<form method="POST" action="ucp.php?change=logindata">
 <input type="text" name="username" placeholder="User name" value="<?php echo $_SESSION['user']; ?>"><br />
 <input type="password" name="passwd" placeholder="Password"><br />
 <button>Save</button>
@@ -486,10 +486,13 @@ $anon_questions = ($res['config_value'] === 'true' ? true : false);
   <?php
     break;
   
+  case 'twitter_signin':
+  ?><p>go away</p><?php
+    break;
+  
   case 'logout':
-    unset($_SESSION['logged_in']);
-    unset($_SESSION['user']);
-    header('Location: usercfg.php');
+    session_destroy();
+    header('Location: ucp.php');
     break;
 }
 
