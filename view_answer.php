@@ -84,7 +84,7 @@ if ($question['asker_private']) {
 </div>
 </div>
 <?php } } ?>
-<a href="/index.php">« Read all answers</a>
+<a href="/index.php">« Read all answers or ask a question</a>
 <hr />
 <div class="footer">
 <p style="font-size: small;"><?php echo htmlspecialchars($site_name); ?> is running <a href="https://github.com/nilsding/justask">justask</a>, which is
