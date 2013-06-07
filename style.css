@@ -36,6 +36,12 @@ button:hover {
   box-shadow: 0px 0px 5px #418bd4;
 }
 
+button:disabled, button:disabled:hover, button:disabled:active {
+  color: #95979a;
+  background-color: #c1c4c8;
+  box-shadow: 0px 0px 0px #000000;
+}
+
 button:active {
   background-color: #939598;
 }
@@ -55,6 +61,12 @@ button.danger:active {
   background-color: #bf0303;
 }
 
+button.danger:disabled, button.danger:disabled:hover, button.danger:disabled:active {
+  color: #9c0f0f;
+  background-color: #e20700;
+  box-shadow: 0px 0px 0px #000000;
+}
+
 button.nature {
   color: #ffffff;
   border-color: #004d00;
@@ -68,6 +80,33 @@ button.nature:hover {
 
 button.nature:active {
   background-color: #008c00;
+}
+
+button.nature:disabled, button.nature:disabled:hover, button.nature:disabled:active {
+  color: #004d00;
+  background-color: #00bf00
+  box-shadow: 0px 0px 0px #000000;
+}
+
+button.blue {
+  color: #ffffff;
+  border-color: #00316e;
+  background-color: #0057ae;
+  text-shadow: 0px 0px 2px #a4c0e4;
+}
+
+button.blue:hover {
+  box-shadow: 0px 0px 5px #6193cf;
+}
+
+button.blue:active {
+  background-color: #00438a;
+}
+
+button.blue:disabled, button.blue:disabled:hover, button.blue:disabled:active {
+  color: #00316e;
+  background-color: #0057ae;
+  box-shadow: 0px 0px 0px #000000;
 }
 
 /* question box at start page */
@@ -136,6 +175,10 @@ div.question-timestamp {
   display: inline;
 }
 
+div.question-actions span.question-actions-right {
+  float: right;
+}
+
 /* pagination */
 
 ul.pages_list {
@@ -163,7 +206,7 @@ ul.pages_list li a:hover {
   font-weight: bold;
 }
   
-/* usercfg.php specific definitions */
+/* ucp.php specific definitions */
 
 ul.user-menu {
   margin: 0px;
