@@ -60,16 +60,15 @@ $res = $sql->query('SELECT * FROM `' . $MYSQL_TABLE_PREFIX . 'answers` WHERE ans
 if ($res->num_rows !== 1) { ?>
   <p class="message">Answer not found.</p><?php 
 } else { 
-$question = $res->fetch_assoc(); ?>
-<h2>Response to <?php echo htmlspecialchars($question['asker_name']) . (substr($question['asker_name'], -1, 1) === 's' ? "'" : "'s"); ?> question</h2>
-<?php 
-
-$question_time_answered = strtotime($question['answer_timestamp']);
+$question = $res->fetch_assoc();
 if ($question['asker_private']) {
   $question_asked_by = 'Anonymous';
 } else {
   $question_asked_by = htmlspecialchars($question['asker_name']);
-} ?>
+}
+$question_time_answered = strtotime($question['answer_timestamp']);
+?>
+<h2>Response to <?php echo htmlspecialchars($question_asked_by) . (substr($question_asked_by, -1, 1) === 's' ? "'" : "'s"); ?> question</h2>
 <div class="question">
 <img class="asker-gravatar" src="<?php echo get_gravatar_url($question['asker_gravatar'], 48); ?>" alt="<?php echo $question_asked_by; ?>"/>
 <div class="question-text">
