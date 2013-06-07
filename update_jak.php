@@ -43,7 +43,7 @@ switch ($config_version) {
     ?><p>upgrading to <strong>r3</strong>...<br /><?php
     /* new config values in config r3:
      * version = config version number
-     * jak_twitter_on = twitter enabled. [true/false]
+     * cfg_twitter = twitter enabled? [true/false]
      * cfg_twitter_ck = twitter consumer key
      * cfg_twitter_ck = twitter consumer secret
      * cfg_twitter_at = twitter consumer access token
