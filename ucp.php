@@ -415,7 +415,10 @@ if ($question['asker_private']) {
 <textarea name="answer" placeholder="Answer this question..." cols="65">
 </textarea>
 </div>
-<div class="question-actions"><button class="nature" name="action" value="answer">Answer question</button><button class="danger" name="action" value="delete">Delete question</button></div>
+<div class="question-actions">
+<button class="nature" name="action" value="answer">Answer question</button><button class="danger" name="action" value="delete">Delete question</button>
+<span class="question-actions-right"><input type="checkbox" name="post_to_twitter"> Post to Twitter</span>
+</div>
 </div>
 <input type="hidden" name="question_id" value="<?php echo $question['question_id']; ?>">
 </form>
