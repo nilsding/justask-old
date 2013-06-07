@@ -88,6 +88,27 @@ button.nature:disabled, button.nature:disabled:hover, button.nature:disabled:act
   box-shadow: 0px 0px 0px #000000;
 }
 
+button.blue {
+  color: #ffffff;
+  border-color: #00316e;
+  background-color: #0057ae;
+  text-shadow: 0px 0px 2px #a4c0e4;
+}
+
+button.blue:hover {
+  box-shadow: 0px 0px 5px #6193cf;
+}
+
+button.blue:active {
+  background-color: #00438a;
+}
+
+button.blue:disabled, button.blue:disabled:hover, button.blue:disabled:active {
+  color: #00316e;
+  background-color: #0057ae;
+  box-shadow: 0px 0px 0px #000000;
+}
+
 /* question box at start page */
 
 div.question-box {
