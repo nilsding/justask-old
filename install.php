@@ -52,6 +52,11 @@ case "justask_values":
 <td class="info">Allow people to use their Gravatar email address as a profile picture.</td>
 </tr>
 <tr>
+<td><label for="jak_twitter_on">Enable Twitter:</label></td>
+<td><input type="checkbox" name="jak_twitter_on" checked></td>
+<td class="info">Tweets a tweet automatically to Twitter. Configuring happens later in the UCP.</td>
+</tr>
+<tr>
 <td><label for="jak_anonymous_questions">Allow anonymous questions?</label></td>
 <td><input type="checkbox" name="jak_anonymous_questions" checked></td>
 <td class="info">Allow people to ask you anonymous questions</td>
@@ -71,6 +76,11 @@ if (!isset($_GET['jak_anonymous_questions'])) {
   $_SESSION['jak_anonymous_questions'] = false;
 } else {
   $_SESSION['jak_anonymous_questions'] = true;
+}
+if (!isset($_GET['jak_twitter_on'])) {
+  $_SESSION['jak_twitter_on'] = false;
+} else {
+  $_SESSION['jak_twitter_on'] = true;
 }
 if (!isset($_GET['jak_name'])) { /* who would do this? */
   $_SESSION['jak_name'] = 'An instance of justask without a name';
@@ -200,6 +210,13 @@ case "finish_2": ?>
     echo "<p>Oh and please ignore the following errors, if any. Thanks! :3</p>";
   }
   
+  $JUSTASK_CONFIG_VERSION = 3;
+  
+  /* default twitter consumer keys */
+  $JUSTASK_TWITTER_CK = "ABr5S6jAB4RQYFYWm5Sq";
+  $JUSTASK_TWITTER_CS = "ICM7eKAlu6PSPysQr7Sim0uFT4HoqK7d5asEpW1Qd6";
+  $JUSTASK_TWITTER_CALLBACK = "http://" . $_SERVER['HTTP_HOST'] . "/callback.php";
+  
   echo "<p>Creating config table...</p>";
   
   $sql_str = 'CREATE TABLE IF NOT EXISTS `' . $MYSQL_TABLE_PREFIX . 'config` (`config_id` varchar(20) COLLATE utf8_unicode_ci ' . 
@@ -210,7 +227,26 @@ case "finish_2": ?>
     echo "<p>The error was: (" . $sql->errno . ") " . $sql->error . "</p>";
   }
   
-  $sql_str = 'INSERT INTO `' . $MYSQL_TABLE_PREFIX . 'config` (`config_id`, `config_value`) VALUES (\'cfg_sitename\', \'' . $sql->real_escape_string($_SESSION['jak_name']) . '\'), (\'cfg_gravatar\', \'' . ($_SESSION['jak_gravatar'] ? "true" : "false") . '\'), (\'cfg_anon_questions\', \'' . ($_SESSION['jak_anonymous_questions'] ? "true" : "false") . '\'), (\'cfg_max_entries\', \'' . $_SESSION['jak_entriesperpage'] . '\');';
+  /* store database config version which will be used for a possible upgrade script */
+  $sql_str = 'INSERT INTO `' . $MYSQL_TABLE_PREFIX . 'config` (`config_id`, `config_value`) VALUES (\'version\', \'' . $JUSTASK_CONFIG_VERSION . '\');';
+  if (!$sql->query($sql_str)) {
+    if ($sql->errno != 1062) { // errno 1062 = Duplicate entry 'blah' for key 'PRIMARY'
+      echo "<p>The query <code>$sql_str</code> failed! :(</p>";
+      echo "<p>The error was: (" . $sql->errno . ") " . $sql->error . "</p>";
+    } else { 
+      $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . $JUSTASK_CONFIG_VERSION . '\' WHERE `config_id`=\'version\'; ';
+      if (!$sql->query($sql_str)) {
+        echo "<p>The query <code>$sql_str</code> failed! :(</p>";
+        echo "<p>The error was: (" . $sql->errno . ") " . $sql->error . "</p>";
+      }
+    }
+  }
+  
+  /* actual config things now */
+  $sql_str = 'INSERT INTO `' . $MYSQL_TABLE_PREFIX . 'config` (`config_id`, `config_value`) VALUES (\'cfg_sitename\', \'' . $sql->real_escape_string($_SESSION['jak_name']) . '\'), (\'cfg_gravatar\', \'' . ($_SESSION['jak_gravatar'] ? "true" : "false") . 
+    '\'), (\'cfg_anon_questions\', \'' . ($_SESSION['jak_anonymous_questions'] ? "true" : "false") . '\'), (\'cfg_max_entries\', \'' . $_SESSION['jak_entriesperpage'] . '\'), (\'cfg_twitter\', \'' . ($_SESSION['jak_twitter_on'] ? "true" : "false") . 
+    '\'), (\'cfg_twitter_ck\', \'' . strrev($JUSTASK_TWITTER_CK) . '\'), (\'cfg_twitter_cs\', \'' . strrev($JUSTASK_TWITTER_CS) . '\'), (\'cfg_twitter_at\', \'\'), (\'cfg_twitter_ats\', \'\'), (\'cfg_twitter_callbk\', \'' . $sql->real_escape_string($JUSTASK_TWITTER_CALLBACK) . 
+    '\');';
   
   if (!$sql->query($sql_str)) {
     if ($sql->errno != 1062) { // errno 1062 = Duplicate entry 'blah' for key 'PRIMARY'
@@ -229,18 +265,42 @@ case "finish_2": ?>
         echo "<p>The error was: (" . $sql->errno . ") " . $sql->error . "</p>";
       }
       
-      $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . ($_SESSION['jak_anonymous_questions'] ? "true" : "false"). '\' WHERE `config_id`=\'cfg_anon_questions\';';
+      $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . ($_SESSION['jak_anonymous_questions'] ? "true" : "false") . '\' WHERE `config_id`=\'cfg_anon_questions\';';
       if (!$sql->query($sql_str)) {
         echo "<p>The query <code>$sql_str</code> failed! :(</p>";
         echo "<p>The error was: (" . $sql->errno . ") " . $sql->error . "</p>";
       }
       
-      $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . $_SESSION['jak_entriesperpage']. '\' WHERE `config_id`=\'cfg_max_entries\';';
+      $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . $_SESSION['jak_entriesperpage'] . '\' WHERE `config_id`=\'cfg_max_entries\';';
       if (!$sql->query($sql_str)) {
         echo "<p>The query <code>$sql_str</code> failed! :(</p>";
         echo "<p>The error was: (" . $sql->errno . ") " . $sql->error . "</p>";
       }
-    }
+      
+      $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . ($_SESSION['jak_twitter_on'] ? "true" : "false") . '\' WHERE `config_id`=\'cfg_twitter\';';
+      if (!$sql->query($sql_str)) {
+        echo "<p>The query <code>$sql_str</code> failed! :(</p>";
+        echo "<p>The error was: (" . $sql->errno . ") " . $sql->error . "</p>";
+      }
+      
+      $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . strrev($JUSTASK_TWITTER_CK) . '\' WHERE `config_id`=\'cfg_twitter_ck\';';
+      if (!$sql->query($sql_str)) {
+        echo "<p>The query <code>$sql_str</code> failed! :(</p>";
+        echo "<p>The error was: (" . $sql->errno . ") " . $sql->error . "</p>";
+      }
+      
+      $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . strrev($JUSTASK_TWITTER_CS) . '\' WHERE `config_id`=\'cfg_twitter_cs\';';
+      if (!$sql->query($sql_str)) {
+        echo "<p>The query <code>$sql_str</code> failed! :(</p>";
+        echo "<p>The error was: (" . $sql->errno . ") " . $sql->error . "</p>";
+      }
+      
+      $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . $sql->real_escape_string($JUSTASK_TWITTER_CALLBACK) . '\' WHERE `config_id`=\'cfg_twitter_callbk\';';
+      if (!$sql->query($sql_str)) {
+        echo "<p>The query <code>$sql_str</code> failed! :(</p>";
+        echo "<p>The error was: (" . $sql->errno . ") " . $sql->error . "</p>";
+      }
+    } 
   }
   
   echo "<p>Creating default user [username: &quot;user&quot;, password: &quot;password&quot;]...</p>";
@@ -283,7 +343,7 @@ case "finish_2": ?>
   }
   
   ?>
-  <p>If no errors occurred, installation is almost complete! You may now want to delete the install.php file, as it's not needed anymore, and head over to <a href="usercfg.php">usercfg</a>, the main control panel (and for now your inbox).</p>
+  <p>If no errors occurred, installation is almost complete! You may now want to delete the install.php file, as it's not needed anymore, and head over to <a href="ucp.php">ucp</a>, the main control panel (and for now your inbox).</p>
   <?php
 }
 ?>

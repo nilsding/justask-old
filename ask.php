@@ -49,7 +49,7 @@ if ($anon_questions) {
   }
 }
 
-if ($question === '') {
+if (trim($question) === '') {
   header('Location: index.php?message=1');
   exit();
 }
@@ -59,9 +59,14 @@ if (strlen($gravatar_address) > 100) {
   exit();
 }
 
-if ($question_asked_by === '' && !$question_asked_anonymously) {
+if (!$anon_questions && trim($question_asked_by) === '') {
   header('Location: index.php?message=3');
   exit();
+}
+
+if ($anon_questions && trim($question_asked_by) === '') {
+  $gravatar_address = "";
+  $question_asked_anonymously = true;
 }
 
 if (strlen($question_asked_by) > 100) {
