@@ -18,6 +18,29 @@ include_once 'gravatar.php';
 $shouldchangepassanduser = false;
 $sql = mysqli_connect($MYSQL_SERVER, $MYSQL_USER, $MYSQL_PASS, $MYSQL_DATABASE);
 
+$res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_twitter\'');
+$res = $res->fetch_assoc();
+$twitter_on = ($res['config_value'] === "true" ? true : false);
+
+if ($twitter_on) {
+  include_once 'oauth/twitteroauth.php';
+  $res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_twitter_ck\'');
+  $res = $res->fetch_assoc();
+  $twitter_ck = $res['config_value'];
+  $res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_twitter_cs\'');
+  $res = $res->fetch_assoc();
+  $twitter_cs = $res['config_value'];
+  $res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_twitter_at\'');
+  $res = $res->fetch_assoc();
+  $twitter_at = $res['config_value'];
+  $res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_twitter_ats\'');
+  $res = $res->fetch_assoc();
+  $twitter_ats = $res['config_value'];
+  $res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_twitter_callbk\'');
+  $res = $res->fetch_assoc();
+  $twitter_callback = $res['config_value'];
+}
+
 if (isset($_GET['change'])) {
   switch ($_GET['change']) {
     case 'logindata':
@@ -100,6 +123,12 @@ if (isset($_GET['change'])) {
         }
       }
       
+      if (!isset($_POST['jak_twitter_on'])) {
+        $twitter_on = false;
+      } else {
+        $twitter_on = true;
+      }
+      
       $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . $sql->real_escape_string($jak_name) . '\' WHERE `config_id`=\'cfg_sitename\'; ';
 //       if (!$sql->query($sql_str)) {
 //         die('rip in pizza');
@@ -109,18 +138,71 @@ if (isset($_GET['change'])) {
       $sql->query($sql_str);
       $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . ($jak_anonymous_questions ? "true" : "false"). '\' WHERE `config_id`=\'cfg_anon_questions\';';
       $sql->query($sql_str);
+      $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . $jak_entriesperpage . '\' WHERE `config_id`=\'cfg_max_entries\';';
+      $sql->query($sql_str);
+      $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . ($twitter_on ? "true" : "false"). '\' WHERE `config_id`=\'cfg_twitter\';';
+      $sql->query($sql_str);
       
-      $sql_str = 'INSERT INTO `' . $MYSQL_TABLE_PREFIX . 'config` (`config_id`, `config_value`) VALUES (\'cfg_max_entries\', \'' . $jak_entriesperpage . '\');';
-      if (!$sql->query($sql_str)) {
-        if ($sql->errno == 1062) {
-          $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . $jak_entriesperpage . '\' WHERE `config_id`=\'cfg_max_entries\';';
-          $sql->query($sql_str);
-        }
-      }
-      
-      
-      header('Location: ucp.php?p=account');
+      header('Location: ucp.php?p=account&m=1');
       break;
+      
+    case 'twitter_signin':
+      if (!$twitter_on) {
+        header('Location: ucp.php?p=account&m=4');
+        exit();
+      }
+      $connection = new TwitterOAuth($twitter_ck, $twitter_cs);
+      $request_token = $connection->getRequestToken($twitter_callback);
+      
+      $_SESSION['oauth_token'] = $token = $request_token['oauth_token'];
+      $_SESSION['oauth_token_secret'] = $request_token['oauth_token_secret'];
+
+      switch ($connection->http_code) {
+        case 200:
+          $url = $connection->getAuthorizeURL($token);
+          header('Location: ' . $url);
+          break;
+        default:
+          header('Location: ucp.php?p=account&m=3');
+          exit();
+      }
+
+      break;
+    case 'twitter_tokens':
+      if (!$twitter_on) {
+        header('Location: ucp.php?p=account&m=4');
+        exit();
+      }
+     /* ck, cs, at, ats, callback */
+
+    if (isset($_POST['ck'])) {
+      $s = $sql->real_escape_string($_POST['ck']);
+      $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . $s . '\' WHERE `config_id`=\'cfg_twitter_ck\';';
+      $sql->query($sql_str);
+    }
+    if (isset($_POST['cs'])) {
+      $s = $sql->real_escape_string($_POST['cs']);
+      $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . $s . '\' WHERE `config_id`=\'cfg_twitter_cs\';';
+      $sql->query($sql_str);
+    }
+    if (isset($_POST['at'])) {
+      $s = $sql->real_escape_string($_POST['at']);
+      $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . $s . '\' WHERE `config_id`=\'cfg_twitter_at\';';
+      $sql->query($sql_str);
+    }
+    if (isset($_POST['ats'])) {
+      $s = $sql->real_escape_string($_POST['ats']);
+      $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . $s . '\' WHERE `config_id`=\'cfg_twitter_ats\';';
+      $sql->query($sql_str);
+    }
+    if (isset($_POST['callback'])) {
+      $s = $sql->real_escape_string($_POST['callback']);
+      $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . $s . '\' WHERE `config_id`=\'cfg_twitter_callbk\';';
+      $sql->query($sql_str);
+    }
+    
+    header('Location: ucp.php?p=account&m=1');
+    break;
   }
 //   header('Location: ucp.php');
   exit();
@@ -169,6 +251,17 @@ $user_gravatar_email = $res['config_value'];
 $res = $sql->query('SELECT * FROM `' . $MYSQL_TABLE_PREFIX . 'inbox`');
 $question_count = $res->num_rows;
 
+$res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_user_gravatar\'');
+$res = $res->fetch_assoc();
+$user_gravatar_email = $res['config_value'];
+
+$res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_user_gravatar\'');
+$res = $res->fetch_assoc();
+$user_gravatar_email = $res['config_value'];
+
+$res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_user_gravatar\'');
+$res = $res->fetch_assoc();
+$user_gravatar_email = $res['config_value'];
 
 $res = $sql->query('SELECT * FROM `' . $MYSQL_TABLE_PREFIX . 'answers`');
 $answer_count = $res->num_rows;
@@ -433,6 +526,13 @@ if ($pagenum < $last_page) { /* are we not on the last page */ ?>
     break;
   
   case 'account': 
+  
+if (!isset($_GET['m'])) {
+  $m = '0';
+} else {
+  $m = $_GET['m'];
+}
+
 $res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_gravatar\'');
 $res = $res->fetch_assoc();
 $gravatar = ($res['config_value'] === 'true' ? true : false);
@@ -441,9 +541,39 @@ $res = $res->fetch_assoc();
 $anon_questions = ($res['config_value'] === 'true' ? true : false);
 ?>
 <h2>User details</h2>
+<?php
+/* messages:
+ *  0 - don't show a message
+ *  1 - successfully stored everything
+ *  2 - wait, what
+ *  3 - something went wrong
+ *  4 - you need to activate twitter for that
+ *  5 - hooray for we have twitter
+ */
+
+switch ($m) {
+  case '1':
+    ?><p class="message">Successfully wrote config.</p><?php
+    break;
+  case '2':
+    ?><p class="message">Wait, what.</p><?php
+    break;
+  case '3':
+    ?><p class="message">Something went horribly wrong. Don't worry, this time it wasn't your fault. (And if it was your fault, I hate you now.)</p><?php
+    break;
+  case '4':
+    ?><p class="message">To do that, you need to have The Twitter.</p><?php
+    break;
+  case '5':
+    ?><p class="message">Successfully connected with Twitter.</p><?php
+    break;
+  case '0':
+  default:
+}
+?>
 <form method="POST" action="ucp.php?change=userdetails">
 <label for="gravatar_email">Gravatar email address: </label><input type="text" name="gravatar_email" placeholder="Gravatar email address" value="<?php echo $user_gravatar_email; ?>">
-<button>Save</button>
+<button class="nature">Save</button>
 </form>
 
 <h2>justask settings</h2>
@@ -466,28 +596,68 @@ $anon_questions = ($res['config_value'] === 'true' ? true : false);
 <td class="info">Allow people to use their Gravatar email address as a profile picture.</td>
 </tr>
 <tr>
+<td><label for="jak_twitter_on">Enable Twitter:</label></td>
+<td><input type="checkbox" name="jak_twitter_on"<?php echo ($twitter_on ? " checked" : ""); ?>></td>
+<td class="info">Tweets a tweet automatically to Twitter.</td>
+</tr>
+<tr>
 <td><label for="jak_anonymous_questions">Allow anonymous questions?</label></td>
 <td><input type="checkbox" name="jak_anonymous_questions"<?php echo ($anon_questions ? " checked" : ""); ?>></td>
 <td class="info">Allow people to ask you anonymous questions</td>
 </tr>
 </table>
-<button>Save</button>
+<button class="nature">Save</button>
 </form>
+
+<?php if ($twitter_on) { ?>
+<h2>Posting to Twitter</h2>
+<form method="POST" action="ucp.php?change=twitter_signin">
+<button class="blue">Sign in with Twitter</button>
+</form>
+
+<form method="POST" action="ucp.php?change=twitter_tokens">
+<p>You may define your own access tokens here for promotional uses.</p>
+<table>
+<tr>
+<td><label for="ck">Consumer Key:</label></td>
+<td><input type="text" name="ck" value="<?php echo $twitter_ck ?>"></td>
+<td class="info">The consumer Key.</td>
+</tr>
+<tr>
+<td><label for="cs">Consumer Secret:</label></td>
+<td><input type="text" name="cs" value="<?php echo $twitter_cs ?>"></td>
+<td class="info">The consumer secret.</td>
+</tr>
+<tr>
+<td><label for="at">Access Token:</label></td>
+<td><input type="text" name="at" value="<?php echo $twitter_at ?>"></td>
+<td class="info">The access token.</td>
+</tr>
+<tr>
+<td><label for="ats">Access Token Secret:</label></td>
+<td><input type="text" name="ats" value="<?php echo $twitter_ats ?>"></td>
+<td class="info">The access token sectet.</td>
+</tr>
+<tr>
+<td><label for="callback">Callback URL:</label></td>
+<td><input type="text" name="callback" value="<?php echo $twitter_callback ?>"></td>
+<td class="info">The full URL to your <code>callback.php</code>.</td>
+</tr>
+</table>
+<button class="nature">Save</button>
+</form>
+<?php } ?>
 
 <h2<?php if ($shouldchangepassanduser) echo ' class="should_change"'; ?>>Login details</h2>
 <p>Change your username and password here.</p>
 <form method="POST" action="ucp.php?change=logindata">
 <input type="text" name="username" placeholder="User name" value="<?php echo $_SESSION['user']; ?>"><br />
 <input type="password" name="passwd" placeholder="Password"><br />
-<button>Save</button>
+<button class="nature">Save</button>
 </form>
 
 
   <?php
-    break;
-  
-  case 'twitter_signin':
-  ?><p>go away</p><?php
     break;
   
   case 'logout':
