@@ -1,0 +1,32 @@
+{include="header"}
+{if="!$logged_in"}
+<h1>Log in</h1>
+<ul class="user-menu">
+<li><strong>Not logged in.</strong></li>
+</ul>
+{include="ucp-login"}
+{else}
+<h1>User control panel</h1>
+
+<ul class="user-menu">
+<li><a href="ucp.php?p=front">Main page</a></li>
+<li><a href="ucp.php?p=inbox">Inbox{if="$question_count > 0"} <span class="menu-counter">{$question_count}</span>{/if}</a></li>
+<li><a href="ucp.php?p=answers">Answers</a></li>
+<li><a href="ucp.php?p=settings">Settings{if="$shouldchangepassanduser"} <span class="menu-important">!</span>{/if}</a></li>
+<li><a href="ucp.php?p=logout">Logout</a></li>
+</ul>
+{if="$shouldchangepassanduser"}
+<p>For security reasons, you should change your password and your user name immediately to something else.</p>
+{/if}
+
+{if="$current_page === 'front'"}
+{include="ucp-front"}
+{elseif="$current_page === 'inbox'"}
+{include="ucp-inbox"}
+{elseif="$current_page === 'answers'"}
+{include="ucp-answers"}
+{elseif="$current_page === 'settings'"}
+{include="ucp-settings"}
+{/if}
+{/if}
+{include="footer"}

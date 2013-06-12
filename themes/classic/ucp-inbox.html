@@ -1,0 +1,29 @@
+{if="$question_count == 0"}
+<p class="message">No new questions.</p>
+{else}
+{if="$is_message"}<p class="message">{$message}</p>{/if}
+<!-- Begin questions -->
+{loop="questions"}
+<form action="answer.php" method="POST">
+<div class="question">
+<img class="asker-gravatar" src="{$value.asker_gravatar}" alt="{$value.question_asked_by}"/>
+<div class="question-text">
+<div class="question-timestamp">{$value.question_time_asked}</div>
+<div class="question-user-asked">{$value.question_asked_by} asked:</div>
+<div class="question-content">{$value.question_content}</div>
+</div>
+<div class="question-answer-area">
+<textarea name="answer" placeholder="Answer this question..." class="question-box-question">
+</textarea>
+</div>
+<div class="question-actions">
+<button class="nature" name="action" value="answer">Answer question</button><button class="danger" name="action" value="delete">Delete question</button>
+<span class="question-actions-right">{if="$twitter_on"}<input type="checkbox" name="post_to_twitter"> Post to Twitter{/if}</span>
+</div>
+</div>
+<input type="hidden" name="question_id" value="{$value.question_id}">
+</form>
+{/loop}
+<!-- End questions -->
+{include="pagination"}
+{/if}
