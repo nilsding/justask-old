@@ -23,7 +23,7 @@ $res = $res->fetch_assoc();
 $twitter_on = ($res['config_value'] === "true" ? true : false);
 
 if ($twitter_on) {
-  include_once 'oauth/twitteroauth.php';
+  include_once 'include/oauth/twitteroauth.php';
   $res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_twitter_ck\'');
   $res = $res->fetch_assoc();
   $twitter_ck = $res['config_value'];
@@ -129,6 +129,12 @@ if (isset($_GET['change'])) {
         $twitter_on = true;
       }
       
+      if (!isset($_POST['jak_theme'])) {
+        $jak_theme = "classic";
+      } else {
+        $jak_theme = $sql->real_escape_string($_POST['jak_theme']);
+      }
+      
       $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . $sql->real_escape_string($jak_name) . '\' WHERE `config_id`=\'cfg_sitename\'; ';
 //       if (!$sql->query($sql_str)) {
 //         die('rip in pizza');
@@ -140,7 +146,9 @@ if (isset($_GET['change'])) {
       $sql->query($sql_str);
       $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . $jak_entriesperpage . '\' WHERE `config_id`=\'cfg_max_entries\';';
       $sql->query($sql_str);
-      $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . ($twitter_on ? "true" : "false"). '\' WHERE `config_id`=\'cfg_twitter\';';
+      $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . ($twitter_on ? "true" : "false") . '\' WHERE `config_id`=\'cfg_twitter\';';
+      $sql->query($sql_str);
+      $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . $jak_theme . '\' WHERE `config_id`=\'cfg_currtheme\';';
       $sql->query($sql_str);
       
       header('Location: ucp.php?p=account&m=1');
@@ -243,7 +251,18 @@ unset($p_pass);
 $res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_sitename\'');
 $res = $res->fetch_assoc();
 $site_name = $res['config_value'];
-
+$res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_currtheme\'');
+$res = $res->fetch_assoc();
+$current_theme = $res['config_value'];
+$res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_gravatar\'');
+$res = $res->fetch_assoc();
+$gravatar = ($res['config_value'] === 'true' ? true : false);
+$res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_anon_questions\'');
+$res = $res->fetch_assoc();
+$anon_questions = ($res['config_value'] === 'true' ? true : false);
+$res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_username\'');
+$res = $res->fetch_assoc();
+$user_name = $res['config_value'];
 $res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_user_gravatar\'');
 $res = $res->fetch_assoc();
 $user_gravatar_email = $res['config_value'];
@@ -251,17 +270,6 @@ $user_gravatar_email = $res['config_value'];
 $res = $sql->query('SELECT * FROM `' . $MYSQL_TABLE_PREFIX . 'inbox`');
 $question_count = $res->num_rows;
 
-$res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_user_gravatar\'');
-$res = $res->fetch_assoc();
-$user_gravatar_email = $res['config_value'];
-
-$res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_user_gravatar\'');
-$res = $res->fetch_assoc();
-$user_gravatar_email = $res['config_value'];
-
-$res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_user_gravatar\'');
-$res = $res->fetch_assoc();
-$user_gravatar_email = $res['config_value'];
 
 $res = $sql->query('SELECT * FROM `' . $MYSQL_TABLE_PREFIX . 'answers`');
 $answer_count = $res->num_rows;
@@ -281,404 +289,257 @@ if (!isset($_GET['page'])) {
 if ($pagenum < 1) {
   $pagenum = 1;
 }
-?>
-<!DOCTYPE html>
-<html>
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<link rel="stylesheet" type="text/css" href="style.css" />
-<title>justask - user control panel</title>
-</head>
-<body>
-<h1>User control panel</h1>
-<?php if (!isset($_SESSION['logged_in'])) { ?>
-<p>You may want to log in.</p>
-<form method="POST" action="ucp.php">
-<input type="text" name="username" placeholder="User name"><br />
-<input type="password" name="passwd" placeholder="Password"><br />
-<button>Log in</button>
-</form>
-<?php } 
-else if ($_SESSION['logged_in'] === true) { 
-  if (!isset($_GET['p'])) {
-    $page = "front";
-  } else {
-    $page = $_GET['p'];
-  } ?>
-<ul class="user-menu">
-<li><a href="ucp.php?p=front">Main page</a></li>
-<li><a href="ucp.php?p=inbox">Inbox<?php if ($question_count > 0) echo ' <span class="menu-counter">' . $question_count . '</span>'; ?></a></li>
-<li><a href="ucp.php?p=answers">Answers</a></li>
-<li><a href="ucp.php?p=account">Settings<?php if ($shouldchangepassanduser) echo ' <span class="menu-important">!</span>'; ?></a></li>
-<li><a href="ucp.php?p=logout">Logout</a></li>
-</ul>
-<!--<p><img src="<?php echo get_gravatar_url($user_gravatar_email, 48); ?>" alt="Your profile picture" />
-Logged in as <?php echo $_SESSION['user']; ?></p> -->
 
-<?php if ($shouldchangepassanduser) { ?>
-<p>For security reasons, you should change your password and your user name immediately to something else.</p>
-<?php } ?>
+$message = "";
+$is_message = true;
 
-<?php
+if (!isset($_GET['m'])) {
+  $m = '0';
+} else {
+  $m = $_GET['m'];
+}
+
+if (!isset($_GET['p'])) {
+  $page = "front";
+} else {
+  $page = $_GET['p'];
+}
+
+$last_page = 1;
+$add_params = "";
+$pages = array();
+$themes = array();
+$questions = array();
+$responses = array();
 
 switch ($page) {
-  default:
-  case 'front':
-if (!isset($_GET['m'])) {
-  $m = '0';
-} else {
-  $m = $_GET['m'];
-}
-/* messages:
- *  0 - don't show a message
- *  1 - what the f- happened?
- *  2 - usercfg was renamed
- */
-
-switch ($m) {
-  case '1':
-    ?><p class="message">What the f- happened?</p><?php
-    break;
-  case '2':
-    ?><p class="message"><code>ucp.php</code> was renamed to <code>ucp.php</code>, please update your bookmarks!</p><?php
-    break;
-  case '0':
-  default:
-}
-?>
-<p><b>Welcome to justask, <?php echo $_SESSION['user'] ?>!</b></p>
-<p>So far, you have answered <?php echo $answer_count == 0 ? "no" : ($answer_count == 1 ? "one" : $answer_count); ?> question<?php echo $answer_count != 1 ? "s" : ""; ?>!</p>
-<?php
-    break;
-  
   case 'inbox':
-if (!isset($_GET['m'])) {
-  $m = '0';
-} else {
-  $m = $_GET['m'];
-}
-/* messages:
- *  0 - don't show a message
- *  1 - successfully deleted question
- *  2 - successfully answered question
- *  3 - you have to write an answer
- *  4 - internal error
- */
+    /* messages for inbox:
+    *  0 - don't show a message
+    *  1 - successfully deleted question
+    *  2 - successfully answered question
+    *  3 - you have to write an answer
+    *  4 - internal error
+    */
+    if ($question_count == 0) { 
+      $message = "No new questions.";
+    } else { 
+      switch ($m) {
+        case '1':
+          $message = "Successfully deleted question.";
+          break;
+        case '2':
+          $message = "Successfully answered question.";
+          break;
+        case '3':
+          $message = "You have to write an answer!";
+          break;
+        case '4':
+          $message = "Internal server error.";
+          break;
+        case '0':
+        default:
+          $is_message = false;
+      }
+    
+      $res = $sql->query('SELECT * FROM `' . $MYSQL_TABLE_PREFIX . 'inbox` ORDER BY `question_timestamp` DESC');
 
-  if ($question_count == 0) { ?>
-<p class="message">No new questions.</p>
-<?php } else { 
+      $last_page = ceil($res->num_rows / $max_entries_per_page); 
+      if ($pagenum > $last_page) {
+        $pagenum = $last_page;
+      }
+      $max_sql_str_part_thing = ' LIMIT ' . ($pagenum - 1) * $max_entries_per_page . ',' . $max_entries_per_page; 
 
-switch ($m) {
-  case '1':
-    ?><p class="message">Successfully deleted question.</p><?php
+      $res = $sql->query('SELECT * FROM `' . $MYSQL_TABLE_PREFIX . 'inbox` ORDER BY `question_timestamp` DESC' . $max_sql_str_part_thing);
+
+      while ($question = $res->fetch_assoc()) {
+        $question_time_asked = strtotime($question['question_timestamp']);
+        if ($question['asker_private']) {
+          $question_asked_by = 'Anonymous';
+        } else {
+          $question_asked_by = htmlspecialchars($question['asker_name']);
+        }
+        array_push($questions, array("question_asked_by" => htmlspecialchars($question_asked_by), 
+                                        "asker_gravatar" => get_gravatar_url($question['asker_gravatar'], 48),
+                                   "question_time_asked" => htmlspecialchars(date('l jS F Y G:i', $question_time_asked)),
+                                      "question_content" => str_replace("\n", "<br />", htmlspecialchars($question['question_content'])),
+                                           "question_id" => $question['question_id']));
+      }
+      for ($i = 0; $i < $last_page; $i++) {
+        array_push($pages, "PAGE");
+      }
+    }
+    $add_params = "&p=inbox";
     break;
-  case '2':
-    ?><p class="message">Successfully answered question.</p><?php
-    break;
-  case '3':
-    ?><p class="message">You have to write an answer!</p><?php
-    break;
-  case '4':
-    ?><p class="message">Internal server error.</p><?php
-    break;
-  case '0':
-  default:
-}
-
-$res = $sql->query('SELECT * FROM `' . $MYSQL_TABLE_PREFIX . 'inbox` ORDER BY `question_timestamp` DESC');
-
-$last_page = ceil($res->num_rows / $max_entries_per_page); 
-if ($pagenum > $last_page) {
-  $pagenum = $last_page;
-}
-$max_sql_str_part_thing = ' LIMIT ' . ($pagenum - 1) * $max_entries_per_page . ',' . $max_entries_per_page; 
-
-$res = $sql->query('SELECT * FROM `' . $MYSQL_TABLE_PREFIX . 'inbox` ORDER BY `question_timestamp` DESC' . $max_sql_str_part_thing);
-
-while ($question = $res->fetch_assoc()) { 
-$question_time_asked = strtotime($question['question_timestamp']);
-if ($question['asker_private']) {
-  $question_asked_by = 'Anonymous';
-} else {
-  $question_asked_by = htmlspecialchars($question['asker_name']);
-} ?>
-<form action="answer.php" method="POST">
-<div class="question">
-<img class="asker-gravatar" src="<?php echo get_gravatar_url($question['asker_gravatar'], 48); ?>" alt="<?php echo $question_asked_by; ?>"/>
-<div class="question-text">
-<div class="question-timestamp"><?php echo date('l jS F Y G:i', $question_time_asked); ?></div>
-<div class="question-user-asked"><?php echo $question_asked_by; ?> asked:</div>
-<div class="question-content"><?php echo str_replace("\n", "<br />", htmlspecialchars($question['question_content'])); ?></div>
-</div>
-<div class="question-answer-area">
-<textarea name="answer" placeholder="Answer this question..." cols="65">
-</textarea>
-</div>
-<div class="question-actions">
-<button class="nature" name="action" value="answer">Answer question</button><button class="danger" name="action" value="delete">Delete question</button>
-<span class="question-actions-right"><input type="checkbox" name="post_to_twitter"> Post to Twitter</span>
-</div>
-</div>
-<input type="hidden" name="question_id" value="<?php echo $question['question_id']; ?>">
-</form>
-<?php
-} ?>
-<!-- Begin page numbering thing -->
-<div class="pages">
-<ul class="pages_list">
-<?php if ($pagenum > 1) { /* are we not on the first page? */ ?>
-<li><a href="<?php echo $_SERVER['PHP_SELF'] . '?p=inbox&page=1' ?>">«</a></li>
-<li><a href="<?php echo $_SERVER['PHP_SELF'] . '?p=inbox&page=' . ($pagenum == 1 ? 1 : $pagenum - 1); ?>">‹</a></li>
-<?php } 
-for ($i = 1; $i <= $last_page; $i++) {
-  ?><li><a href="<?php echo $_SERVER['PHP_SELF'] . '?p=inbox&page=' . $i; if ($pagenum == $i) echo '" class="current-page'; ?>"><?php echo $i; ?></a></li><?php
-}
-if ($pagenum < $last_page) { /* are we not on the last page */ ?>
-<li><a href="<?php echo $_SERVER['PHP_SELF'] . '?p=inbox&page=' . ($pagenum == $last_page ? $last_page : $pagenum + 1); ?>">›</a></li>
-<li><a href="<?php echo $_SERVER['PHP_SELF'] . '?p=inbox&page=' . $last_page; ?>">»</a></li>
-<?php } ?>
-</ul>
-</div>
-<!-- End page numbering thing -->
-<?php
-}
-    break;
-  
+    
   case 'answers':
-if (!isset($_GET['m'])) {
-  $m = '0';
-} else {
-  $m = $_GET['m'];
-}
-/* messages:
- *  0 - don't show a message
- *  1 - successfully deleted answer
- *  2 - internal error
- */
+    /* messages for answer management:
+    *  0 - don't show a message
+    *  1 - successfully deleted answer
+    *  2 - internal error
+    */
+    if ($answer_count == 0) { 
+      $message = "You haven't answered any questions yet!";
+    } else { 
+      switch ($m) {
+        case '1':
+          $message = "Successfully deleted answer.";
+          break;
+        case '2':
+          $message = "Internal server error.";
+          break;
+        case '0':
+        default:
+          $is_message = false;
+      }
+      $res = $sql->query('SELECT * FROM `' . $MYSQL_TABLE_PREFIX . 'answers` ORDER BY `answer_timestamp` DESC');
 
-  if ($answer_count == 0) { ?>
-<p class="message">You haven't answered any questions yet!.</p>
-<?php } else { 
+      $last_page = ceil($res->num_rows / $max_entries_per_page); 
+      if ($pagenum > $last_page) {
+        $pagenum = $last_page;
+      }
+      $max_sql_str_part_thing = ' LIMIT ' . ($pagenum - 1) * $max_entries_per_page . ',' . $max_entries_per_page; 
 
-switch ($m) {
-  case '1':
-    ?><p class="message">Successfully deleted answer.</p><?php
+      $res = $sql->query('SELECT * FROM `' . $MYSQL_TABLE_PREFIX . 'answers` ORDER BY `answer_timestamp` DESC' . $max_sql_str_part_thing);
+
+      while ($question = $res->fetch_assoc()) { 
+        $question_time_answered = strtotime($question['answer_timestamp']);
+        if ($question['asker_private']) {
+          $question_asked_by = 'Anonymous';
+        } else {
+          $question_asked_by = htmlspecialchars($question['asker_name']);
+        }
+        array_push($responses, array("question_asked_by" => htmlspecialchars($question_asked_by), 
+                                        "asker_gravatar" => get_gravatar_url($question['asker_gravatar'], 48),
+                                           "answer_text" => str_replace("\n", "<br />", htmlspecialchars($question['answer_text'])),
+                                "question_time_answered" => htmlspecialchars(date('l jS F Y G:i', $question_time_answered)),
+                                      "question_content" => str_replace("\n", "<br />", htmlspecialchars($question['question_content'])),
+                                             "answer_id" => $question['answer_id']));
+      }
+      for ($i = 0; $i < $last_page; $i++) {
+        array_push($pages, "PAGE");
+      }
+    }
+    $add_params = "&p=answers";
     break;
-  case '2':
-    ?><p class="message">Internal server error.</p><?php
+    
+  case 'account':
+  case 'settings':
+    /* messages for settings:
+    *  0 - don't show a message
+    *  1 - successfully stored everything
+    *  2 - wait, what
+    *  3 - something went wrong
+    *  4 - you need to activate twitter for that
+    *  5 - hooray for we have twitter
+    */
+
+    switch ($m) {
+      case '1':
+        $message = "Successfully wrote config.";
+        break;
+      case '2':
+        $message = "Wait, what.";
+        break;
+      case '3':
+        $message = "Something went horribly wrong. Don't worry, this time it wasn't your fault. (And if it was your fault, I hate you now.)";
+        break;
+      case '4':
+        $message = "To do that, you need to have The Twitter.";
+        break;
+      case '5':
+        $message = "Successfully connected with Twitter.";
+        break;
+      case '0':
+      default:
+        $is_message = false;
+    }
+    $theme_dir = "themes/";
+    $scdir = scandir($theme_dir);
+    $items = count($scdir);
+    for ($i = 0; $i < $items; $i++) {
+      if (is_dir($theme_dir . $scdir[$i]) && ($scdir[$i][0] !== '.')) {
+        array_push($themes, $scdir[$i]);
+      }
+    }
+    
+    $page = "settings";
     break;
-  case '0':
-  default:
-}
-$res = $sql->query('SELECT * FROM `' . $MYSQL_TABLE_PREFIX . 'answers` ORDER BY `answer_timestamp` DESC');
-
-$last_page = ceil($res->num_rows / $max_entries_per_page); 
-if ($pagenum > $last_page) {
-  $pagenum = $last_page;
-}
-$max_sql_str_part_thing = ' LIMIT ' . ($pagenum - 1) * $max_entries_per_page . ',' . $max_entries_per_page; 
-
-$res = $sql->query('SELECT * FROM `' . $MYSQL_TABLE_PREFIX . 'answers` ORDER BY `answer_timestamp` DESC' . $max_sql_str_part_thing);
-
-while ($question = $res->fetch_assoc()) { 
-$question_time_answered = strtotime($question['answer_timestamp']);
-if ($question['asker_private']) {
-  $question_asked_by = 'Anonymous';
-} else {
-  $question_asked_by = htmlspecialchars($question['asker_name']);
-} ?>
-<form action="answer.php" method="POST">
-<div class="question">
-<img class="asker-gravatar" src="<?php echo get_gravatar_url($question['asker_gravatar'], 48); ?>" alt="<?php echo $question_asked_by; ?>"/>
-<div class="question-text">
-<div class="question-timestamp"><?php echo date('l jS F Y G:i', $question_time_answered); ?></div>
-<div class="question-user-asked"><?php echo $question_asked_by; ?> asked:</div>
-<div class="question-content"><?php echo str_replace("\n", "<br />", htmlspecialchars($question['question_content'])); ?></div>
-</div><br />
-<img class="asker-gravatar" src="<?php echo get_gravatar_url($user_gravatar_email, 48); ?>" alt="<?php echo $_SESSION['user']; ?>"/>
-<div class="question-text">
-<div class="question-user-answered"><?php echo $_SESSION['user']; ?> responded:</div>
-<div class="answer-content"><?php echo str_replace("\n", "<br />", htmlspecialchars($question['answer_text'])); ?></div>
-</div>
-<div class="question-actions"><button class="danger" name="action" value="delete_answer">Delete answer</button></div>
-</div>
-<input type="hidden" name="question_id" value="<?php echo $question['answer_id']; ?>">
-</form>
-<?php }
-?>
-<!-- Begin page numbering thing -->
-<div class="pages">
-<ul class="pages_list">
-<?php if ($pagenum > 1) { /* are we not on the first page? */ ?>
-<li><a href="<?php echo $_SERVER['PHP_SELF'] . '?p=answers&page=1' ?>">«</a></li>
-<li><a href="<?php echo $_SERVER['PHP_SELF'] . '?p=answers&page=' . ($pagenum == 1 ? 1 : $pagenum - 1); ?>">‹</a></li>
-<?php } 
-for ($i = 1; $i <= $last_page; $i++) {
-  ?><li><a href="<?php echo $_SERVER['PHP_SELF'] . '?p=answers&page=' . $i; if ($pagenum == $i) echo '" class="current-page'; ?>"><?php echo $i; ?></a></li><?php
-}
-if ($pagenum < $last_page) { /* are we not on the last page */ ?>
-<li><a href="<?php echo $_SERVER['PHP_SELF'] . '?p=answers&page=' . ($pagenum == $last_page ? $last_page : $pagenum + 1); ?>">›</a></li>
-<li><a href="<?php echo $_SERVER['PHP_SELF'] . '?p=answers&page=' . $last_page; ?>">»</a></li>
-<?php } ?>
-</ul>
-</div>
-<!-- End page numbering thing -->
-<?php
-  }
-    break;
-  
-  case 'account': 
-  
-if (!isset($_GET['m'])) {
-  $m = '0';
-} else {
-  $m = $_GET['m'];
-}
-
-$res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_gravatar\'');
-$res = $res->fetch_assoc();
-$gravatar = ($res['config_value'] === 'true' ? true : false);
-$res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_anon_questions\'');
-$res = $res->fetch_assoc();
-$anon_questions = ($res['config_value'] === 'true' ? true : false);
-?>
-<h2>User details</h2>
-<?php
-/* messages:
- *  0 - don't show a message
- *  1 - successfully stored everything
- *  2 - wait, what
- *  3 - something went wrong
- *  4 - you need to activate twitter for that
- *  5 - hooray for we have twitter
- */
-
-switch ($m) {
-  case '1':
-    ?><p class="message">Successfully wrote config.</p><?php
-    break;
-  case '2':
-    ?><p class="message">Wait, what.</p><?php
-    break;
-  case '3':
-    ?><p class="message">Something went horribly wrong. Don't worry, this time it wasn't your fault. (And if it was your fault, I hate you now.)</p><?php
-    break;
-  case '4':
-    ?><p class="message">To do that, you need to have The Twitter.</p><?php
-    break;
-  case '5':
-    ?><p class="message">Successfully connected with Twitter.</p><?php
-    break;
-  case '0':
-  default:
-}
-?>
-<form method="POST" action="ucp.php?change=userdetails">
-<label for="gravatar_email">Gravatar email address: </label><input type="text" name="gravatar_email" placeholder="Gravatar email address" value="<?php echo $user_gravatar_email; ?>">
-<button class="nature">Save</button>
-</form>
-
-<h2>justask settings</h2>
-<p>These are settings for justask.</p>
-<form method="POST" action="ucp.php?change=justask">
-<table>
-<tr>
-<td><label for="jak_name">Name:</label></td>
-<td><input type="text" name="jak_name" value="<?php echo $site_name ?>"></td>
-<td class="info">This is the name used along the site.</td>
-</tr>
-<tr>
-<td><label for="jak_entriesperpage">Max. entries per page:</label></td>
-<td><input type="number" name="jak_entriesperpage" value="<?php echo $max_entries_per_page; ?>"></td>
-<td class="info">How many questions/answers will be shown on each page?</td>
-</tr>
-<tr>
-<td><label for="jak_gravatar">Enable Gravatar:</label></td>
-<td><input type="checkbox" name="jak_gravatar"<?php echo ($gravatar ? " checked" : ""); ?>></td>
-<td class="info">Allow people to use their Gravatar email address as a profile picture.</td>
-</tr>
-<tr>
-<td><label for="jak_twitter_on">Enable Twitter:</label></td>
-<td><input type="checkbox" name="jak_twitter_on"<?php echo ($twitter_on ? " checked" : ""); ?>></td>
-<td class="info">Tweets a tweet automatically to Twitter.</td>
-</tr>
-<tr>
-<td><label for="jak_anonymous_questions">Allow anonymous questions?</label></td>
-<td><input type="checkbox" name="jak_anonymous_questions"<?php echo ($anon_questions ? " checked" : ""); ?>></td>
-<td class="info">Allow people to ask you anonymous questions</td>
-</tr>
-</table>
-<button class="nature">Save</button>
-</form>
-
-<?php if ($twitter_on) { ?>
-<h2>Posting to Twitter</h2>
-<form method="POST" action="ucp.php?change=twitter_signin">
-<button class="blue">Sign in with Twitter</button>
-</form>
-
-<form method="POST" action="ucp.php?change=twitter_tokens">
-<p>You may define your own access tokens here for promotional uses.</p>
-<table>
-<tr>
-<td><label for="ck">Consumer Key:</label></td>
-<td><input type="text" name="ck" value="<?php echo $twitter_ck ?>"></td>
-<td class="info">The consumer Key.</td>
-</tr>
-<tr>
-<td><label for="cs">Consumer Secret:</label></td>
-<td><input type="text" name="cs" value="<?php echo $twitter_cs ?>"></td>
-<td class="info">The consumer secret.</td>
-</tr>
-<tr>
-<td><label for="at">Access Token:</label></td>
-<td><input type="text" name="at" value="<?php echo $twitter_at ?>"></td>
-<td class="info">The access token.</td>
-</tr>
-<tr>
-<td><label for="ats">Access Token Secret:</label></td>
-<td><input type="text" name="ats" value="<?php echo $twitter_ats ?>"></td>
-<td class="info">The access token sectet.</td>
-</tr>
-<tr>
-<td><label for="callback">Callback URL:</label></td>
-<td><input type="text" name="callback" value="<?php echo $twitter_callback ?>"></td>
-<td class="info">The full URL to your <code>callback.php</code>.</td>
-</tr>
-</table>
-<button class="nature">Save</button>
-</form>
-<?php } ?>
-
-<h2<?php if ($shouldchangepassanduser) echo ' class="should_change"'; ?>>Login details</h2>
-<p>Change your username and password here.</p>
-<form method="POST" action="ucp.php?change=logindata">
-<input type="text" name="username" placeholder="User name" value="<?php echo $_SESSION['user']; ?>"><br />
-<input type="password" name="passwd" placeholder="Password"><br />
-<button class="nature">Save</button>
-</form>
-
-
-  <?php
-    break;
-  
+    
   case 'logout':
     session_destroy();
     header('Location: ucp.php');
+    exit();
     break;
+  
+  default:
+  case 'front':
+    /* messages for front:
+    *  0 - don't show a message
+    *  1 - what the f- happened?
+    *  2 - usercfg was renamed
+    */
+    switch ($m) {
+      case '1':
+        $message = "What the f- happened?";
+        break;
+      case '2':
+        $message = "<code>ucp.php</code> was renamed to <code>ucp.php</code>, please update your bookmarks!";
+        break;
+      default:
+        $is_message = false;
+    }
+    $page = 'front';
 }
 
-?>
+/* template thing */
 
-<?php } else { ?>
-<p>???</p>
-<?php unset($_SESSION['logged_in']); } ?>
-<hr />
-<div class="footer">
-<p style="font-size: small;"><?php echo htmlspecialchars($site_name); ?> is running <a href="https://github.com/nilsding/justask">justask</a>, which is
-free software licensed under the <a href="http://www.gnu.org/licenses/agpl-3.0.html">GNU Affero General Public License
-version 3</a>.</p>
-</div>
-</body>
-</html>
+include 'include/rain.tpl.class.php';
+
+raintpl::configure("base_url", null);
+raintpl::configure("path_replace", false);
+raintpl::configure("tpl_dir", "themes/$current_theme/");
+
+$menu = array(array("text" => "Main page", "url" => "ucp.php?p=front"),
+              array("text" => "Inbox",     "url" => "ucp.php?p=inbox"),
+              array("text" => "Answers",   "url" => "ucp.php?p=answers"),
+              array("text" => "Settings",  "url" => "ucp.php?p=settings"),
+              array("text" => "Logout",    "url" => "ucp.php?p=logout"));
+
+$tpl = new RainTPL;
+
+$tpl->assign("pages", $pages);
+$tpl->assign("ucp_menu", $menu);
+$tpl->assign("themes", $themes);
+$tpl->assign("message", $message);
+$tpl->assign("pagenum", $pagenum);
+$tpl->assign("answers", $responses);
+$tpl->assign("gravatar", $gravatar);
+$tpl->assign("current_page", $page);
+$tpl->assign("file_name", "ucp.php");
+$tpl->assign("last_page", $last_page);
+$tpl->assign("questions", $questions);
+$tpl->assign("user_name", $user_name);
+$tpl->assign("add_params", $add_params);
+$tpl->assign("is_message", $is_message);
+$tpl->assign("twitter_ck", $twitter_ck);
+$tpl->assign("twitter_cs", $twitter_cs);
+$tpl->assign("twitter_at", $twitter_at);
+$tpl->assign("twitter_on", $twitter_on);
+$tpl->assign("twitter_ats", $twitter_ats);
+$tpl->assign("answer_count", $answer_count);
+$tpl->assign("current_theme", $current_theme);
+$tpl->assign("question_count", $question_count);
+$tpl->assign("page_self", $_SERVER['PHP_SELF']);
+$tpl->assign("anon_questions", $anon_questions);
+$tpl->assign("logged_in", $_SESSION['logged_in']);
+$tpl->assign("twitter_callback", $twitter_callback);
+$tpl->assign("site_name", htmlspecialchars($site_name));
+$tpl->assign("max_entries_per_page", $max_entries_per_page);
+$tpl->assign("user_gravatar_emailaddr", $user_gravatar_email);
+$tpl->assign("shouldchangepassanduser", $shouldchangepassanduser);
+$tpl->assign("user_gravatar_email", get_gravatar_url($user_gravatar_email, 48));
+
+$tpl->draw("ucp");
+
+?>

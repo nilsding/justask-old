@@ -246,7 +246,7 @@ case "finish_2": ?>
   $sql_str = 'INSERT INTO `' . $MYSQL_TABLE_PREFIX . 'config` (`config_id`, `config_value`) VALUES (\'cfg_sitename\', \'' . $sql->real_escape_string($_SESSION['jak_name']) . '\'), (\'cfg_gravatar\', \'' . ($_SESSION['jak_gravatar'] ? "true" : "false") . 
     '\'), (\'cfg_anon_questions\', \'' . ($_SESSION['jak_anonymous_questions'] ? "true" : "false") . '\'), (\'cfg_max_entries\', \'' . $_SESSION['jak_entriesperpage'] . '\'), (\'cfg_twitter\', \'' . ($_SESSION['jak_twitter_on'] ? "true" : "false") . 
     '\'), (\'cfg_twitter_ck\', \'' . strrev($JUSTASK_TWITTER_CK) . '\'), (\'cfg_twitter_cs\', \'' . strrev($JUSTASK_TWITTER_CS) . '\'), (\'cfg_twitter_at\', \'\'), (\'cfg_twitter_ats\', \'\'), (\'cfg_twitter_callbk\', \'' . $sql->real_escape_string($JUSTASK_TWITTER_CALLBACK) . 
-    '\');';
+    '\'), (\'cfg_currtheme\', \'classic\');';
   
   if (!$sql->query($sql_str)) {
     if ($sql->errno != 1062) { // errno 1062 = Duplicate entry 'blah' for key 'PRIMARY'

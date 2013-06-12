@@ -1,11 +1,4 @@
 <?php
-/* 
- * justask
- * © 2013 nilsding
- * License: AGPLv3, read the LICENSE file for the license text.
- */
-session_start();
-
 if (file_exists('config.php')) {
   require_once('config.php');
 } else {
@@ -13,82 +6,92 @@ if (file_exists('config.php')) {
   exit();
 }
 
-include_once 'gravatar.php';
+include 'gravatar.php';
 
 $sql = mysqli_connect($MYSQL_SERVER, $MYSQL_USER, $MYSQL_PASS, $MYSQL_DATABASE);
+
 $res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_sitename\'');
 $res = $res->fetch_assoc();
 $site_name = $res['config_value'];
+$res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_currtheme\'');
+$res = $res->fetch_assoc();
+$current_theme = $res['config_value'];
 $res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_gravatar\'');
 $res = $res->fetch_assoc();
 $gravatar = ($res['config_value'] === 'true' ? true : false);
+$res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_anon_questions\'');
+$res = $res->fetch_assoc();
+$anon_questions = ($res['config_value'] === 'true' ? true : false);
 $res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_username\'');
 $res = $res->fetch_assoc();
 $user_name = $res['config_value'];
 $res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_user_gravatar\'');
 $res = $res->fetch_assoc();
 $user_gravatar_email = $res['config_value'];
-$res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_max_entries\'');
-$res = $res->fetch_assoc();
-if (!is_numeric($res['config_value'])) {
-  $max_entries_per_page = 10;
-} else {
-  $max_entries_per_page = (int) $res['config_value'];
-}
+$is_message = false;
+$message = "";
+
+$question_asked_by = "";
+$asker_gravatar = get_gravatar_url("", 48);
+$question_time_answered = "";
+$question_content = "";
+$answer_text = "";
 
 if (isset($_GET['id'])) {
   $answer_id = (int) $_GET['id'];
 } else {
   $answer_id = false;
 }
-
-?>
-<!DOCTYPE html>
-<html>
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title><?php echo htmlspecialchars($site_name); ?></title>
-<link rel="stylesheet" type="text/css" href="style.css" />
-</head>
-<body>
-<h1><?php echo htmlspecialchars($site_name); ?></h1>
-<?php 
-if ($answer_id == false) { ?>
-  <p class="message">You have to provide an answer!</p> <?php
+if ($answer_id == false) { 
+  $message = "You have to provide an answer!";
+  $is_message = true;
 } else {
-$res = $sql->query('SELECT * FROM `' . $MYSQL_TABLE_PREFIX . 'answers` WHERE answer_id=' . $answer_id);
-if ($res->num_rows !== 1) { ?>
-  <p class="message">Answer not found.</p><?php 
-} else { 
-$question = $res->fetch_assoc();
-if ($question['asker_private']) {
-  $question_asked_by = 'Anonymous';
-} else {
-  $question_asked_by = htmlspecialchars($question['asker_name']);
+  $res = $sql->query('SELECT * FROM `' . $MYSQL_TABLE_PREFIX . 'answers` WHERE answer_id=' . $answer_id);
+  if ($res->num_rows !== 1) { 
+    $message = "Answer not found."; 
+    $is_message = true;
+  } else { 
+    $question = $res->fetch_assoc();
+    if ($question['asker_private']) {
+      $question_asked_by = 'Anonymous';
+    } else {
+      $question_asked_by = htmlspecialchars($question['asker_name']);
+    }
+    $question_time_answered = date('l jS F Y G:i', strtotime($question['answer_timestamp']));
+    $asker_gravatar = get_gravatar_url($question['asker_gravatar'], 48);
+    $question_content = str_replace("\n", "<br />", htmlspecialchars($question['question_content']));
+    $answer_text = str_replace("\n", "<br />", htmlspecialchars($question['answer_text']));
+  }
 }
-$question_time_answered = strtotime($question['answer_timestamp']);
+
+include 'include/rain.tpl.class.php';
+
+raintpl::configure("base_url", null);
+raintpl::configure("path_replace", false);
+raintpl::configure("tpl_dir", "themes/$current_theme/");
+
+$tpl = new RainTPL;
+
+$tpl->assign("answer_text", $answer_text);
+$tpl->assign("asker_gravatar", $asker_gravatar);
+$tpl->assign("question_content", $question_content);
+$tpl->assign("question_asked_by", $question_asked_by);
+$tpl->assign("question_time_answered", $question_time_answered);
+$tpl->assign("ss_de", (substr($question_asked_by, -1, 1) === 's' ? "'" : "s"));
+$tpl->assign("ss_en", (substr($question_asked_by, -1, 1) === 's' ? "'" : "'s"));
+
+/* everywhere variables */
+$tpl->assign("message", $message);
+$tpl->assign("gravatar", $gravatar);
+$tpl->assign("user_name", $user_name);
+$tpl->assign("is_message", $is_message);
+$tpl->assign("file_name", "update_jak.php");
+$tpl->assign("current_theme", $current_theme);
+$tpl->assign("page_self", $_SERVER['PHP_SELF']);
+$tpl->assign("anon_questions", $anon_questions);
+$tpl->assign("logged_in", $_SESSION['logged_in']);
+$tpl->assign("site_name", htmlspecialchars($site_name));
+$tpl->assign("user_gravatar_email", get_gravatar_url($user_gravatar_email, 48));
+
+$tpl->draw("single-answer");
 ?>
-<h2>Response to <?php echo htmlspecialchars($question_asked_by) . (substr($question_asked_by, -1, 1) === 's' ? "'" : "'s"); ?> question</h2>
-<div class="question">
-<img class="asker-gravatar" src="<?php echo get_gravatar_url($question['asker_gravatar'], 48); ?>" alt="<?php echo $question_asked_by; ?>"/>
-<div class="question-text">
-<div class="question-timestamp"><?php echo date('l jS F Y G:i', $question_time_answered); ?></div>
-<div class="question-user-asked"><?php echo $question_asked_by; ?> asked:</div>
-<div class="question-content"><?php echo str_replace("\n", "<br />", htmlspecialchars($question['question_content'])); ?></div>
-</div><br />
-<img class="asker-gravatar" src="<?php echo get_gravatar_url($user_gravatar_email, 48); ?>" alt="<?php echo $user_name; ?>"/>
-<div class="question-text">
-<div class="question-user-answered"><?php echo $user_name; ?> responded:</div>
-<div class="answer-content"><?php echo str_replace("\n", "<br />", htmlspecialchars($question['answer_text'])); ?></div>
-</div>
-</div>
-<?php } } ?>
-<a href="/index.php">« Read all answers or ask a question</a>
-<hr />
-<div class="footer">
-<p style="font-size: small;"><?php echo htmlspecialchars($site_name); ?> is running <a href="https://github.com/nilsding/justask">justask</a>, which is
-free software licensed under the <a href="http://www.gnu.org/licenses/agpl-3.0.html">GNU Affero General Public License
-version 3</a>.</p>
-</div>
-</body>
-</html>

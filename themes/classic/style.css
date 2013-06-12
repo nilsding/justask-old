@@ -127,6 +127,10 @@ div.question-box h2 {
   padding: inherit;
 }
 
+textarea.question-box-question {
+  width: 494px;
+}
+
 div.question-box-data, div.question-box-anon {
   display: inline-block;
 }

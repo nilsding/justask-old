@@ -15,11 +15,13 @@ if (file_exists('config.php')) {
 
 include_once 'gravatar.php';
 
-
 $sql = mysqli_connect($MYSQL_SERVER, $MYSQL_USER, $MYSQL_PASS, $MYSQL_DATABASE);
 $res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_sitename\'');
 $res = $res->fetch_assoc();
 $site_name = $res['config_value'];
+$res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_currtheme\'');
+$res = $res->fetch_assoc();
+$current_theme = $res['config_value'];
 $res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_gravatar\'');
 $res = $res->fetch_assoc();
 $gravatar = ($res['config_value'] === 'true' ? true : false);
@@ -63,63 +65,37 @@ if (!isset($_GET['message'])) {
  *   5 - illegal operation
  *   6 - successfully asked question, ready to be answered.
  */
-?>
-<!DOCTYPE html>
-<html>
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title><?php echo htmlspecialchars($site_name); ?></title>
-<link rel="stylesheet" type="text/css" href="style.css" />
-</head>
-<body>
-<h1><?php echo htmlspecialchars($site_name); ?></h1>
-<!-- Begin question box -->
-<div class="question-box">
-<h2>Ask me a question!</h2>
-<form method="POST" action="ask.php">
-<?php switch ($message) { 
-case '1': ?>
-<p class="message">You have to ask a question.</p>
-<?php break;
-case '2': ?>
-<p class="message">The name you entered is too long! (100 characters max.)</p>
-<?php break;
-case '3': ?>
-<p class="message">You have to provide a name<?php if ($anon_questions) { ?>, did you want to ask it anonymously?<?php } else { ?>.<?php } ?></p>
-<?php break;
-case '4': ?>
-<p class="message">Gravatar address has to be shorter than 100 characters.</p>
-<?php break;
-case '5': ?>
-<p class="message">You are a horrible person.</p>
-<?php break;
-case '6': ?>
-<p class="message">Question asked successfully!</p>
-<?php break;
-case '0':
-default: ?>
-<?php break;
-} ?>
-<textarea name="question" class="question-box-question" cols="68">
-</textarea><br />
-<div class="question-box-data">
-<input type="text" name="asker_name" placeholder="Your name"><br />
-<?php if ($gravatar) { ?>
-<input type="text" name="gravatar_address" placeholder="Your gravatar address">
-<?php } ?>
-</div>
-<?php if ($anon_questions) { ?>
-<div class="question-box-anon">
-<input type="checkbox" name="anonymous"> <label for="anonymous">Ask anonymously</label>
-</div>
-<?php } ?><br />
-<button>Ask!</button>
-</form>
-</div>
-<!-- End question box -->
-<h2>Questions I responded to</h2>
-<!-- Begin answers -->
-<?php 
+$is_message = true;
+$message_text = "";
+switch ($message) { 
+  case '1': 
+    $message_text = "You have to ask a question.";
+    break;
+  case '2': 
+    $message_text = "The name you have entered is too long! (100 characters max.)";
+    break;
+  case '3': 
+    $message_text = "You have to provide a name";
+    if ($anon_questions) {
+      $message_text .= ", did you want to ask it anonymously?";
+    } else {
+      $message_text .= ".";
+    }
+    break;
+  case '4': 
+    $message_text = "Gravatar address has to be shorter than 100 characters.";
+    break;
+  case '5':
+    $message_text = "You are a horrible person.";
+    break;
+  case '6':
+    $message_text = "Question asked successfully!";
+    break;
+  case '0':
+  default:
+    $is_message = false;
+}
+
 $res = $sql->query('SELECT * FROM `' . $MYSQL_TABLE_PREFIX . 'answers` ORDER BY `answer_timestamp` DESC');
 
 $last_page = ceil($res->num_rows / $max_entries_per_page); 
@@ -130,50 +106,52 @@ $max_sql_str_part_thing = ' LIMIT ' . ($pagenum - 1) * $max_entries_per_page . '
 
 $res = $sql->query('SELECT * FROM `' . $MYSQL_TABLE_PREFIX . 'answers` ORDER BY `answer_timestamp` DESC' . $max_sql_str_part_thing);
 
+$responses = array();
+
 while ($question = $res->fetch_assoc()) { 
-$question_time_answered = strtotime($question['answer_timestamp']);
-if ($question['asker_private']) {
-  $question_asked_by = 'Anonymous';
-} else {
-  $question_asked_by = htmlspecialchars($question['asker_name']);
-} ?>
-<div class="question">
-<img class="asker-gravatar" src="<?php echo get_gravatar_url($question['asker_gravatar'], 48); ?>" alt="<?php echo $question_asked_by; ?>"/>
-<div class="question-text">
-<div class="question-timestamp"><?php echo date('l jS F Y G:i', $question_time_answered); ?></div>
-<div class="question-user-asked"><?php echo $question_asked_by; ?> asked:</div>
-<div class="question-content"><?php echo str_replace("\n", "<br />", htmlspecialchars($question['question_content'])); ?></div>
-</div><br />
-<img class="asker-gravatar" src="<?php echo get_gravatar_url($user_gravatar_email, 48); ?>" alt="<?php echo $user_name; ?>"/>
-<div class="question-text">
-<div class="question-user-answered"><?php echo $user_name; ?> responded:</div>
-<div class="answer-content"><?php echo str_replace("\n", "<br />", htmlspecialchars($question['answer_text'])); ?></div>
-</div>
-</div>
-<?php } ?>
-<!-- End answers -->
-<!-- Begin page numbering thing -->
-<div class="pages">
-<ul class="pages_list">
-<?php if ($pagenum > 1) { /* are we not on the first page? */ ?>
-<li><a href="<?php echo $_SERVER['PHP_SELF'] . '?page=1' ?>">«</a></li>
-<li><a href="<?php echo $_SERVER['PHP_SELF'] . '?page=' . ($pagenum == 1 ? 1 : $pagenum - 1); ?>">‹</a></li>
-<?php } 
-for ($i = 1; $i <= $last_page; $i++) {
-  ?><li><a href="<?php echo $_SERVER['PHP_SELF'] . '?page=' . $i; if ($pagenum == $i) echo '" class="current-page'; ?>"><?php echo $i; ?></a></li><?php
+  $question_time_answered = strtotime($question['answer_timestamp']);
+  if ($question['asker_private']) {
+    $question_asked_by = 'Anonymous';
+  } else {
+    $question_asked_by = htmlspecialchars($question['asker_name']);
+  }
+  array_push($responses, array("question_asked_by" => htmlspecialchars($question_asked_by), 
+                                  "asker_gravatar" => get_gravatar_url($question['asker_gravatar'], 48),
+                                     "answer_text" => str_replace("\n", "<br />", htmlspecialchars($question['answer_text'])),
+                          "question_time_answered" => htmlspecialchars(date('l jS F Y G:i', $question_time_answered)),
+                                "question_content" => str_replace("\n", "<br />", htmlspecialchars($question['question_content']))));
 }
-if ($pagenum < $last_page) { /* are we not on the last page */ ?>
-<li><a href="<?php echo $_SERVER['PHP_SELF'] . '?page=' . ($pagenum == $last_page ? $last_page : $pagenum + 1); ?>">›</a></li>
-<li><a href="<?php echo $_SERVER['PHP_SELF'] . '?page=' . $last_page; ?>">»</a></li>
-<?php } ?>
-</ul>
-</div>
-<!-- End page numbering thing -->
-<hr />
-<div class="footer">
-<p style="font-size: small;"><?php echo htmlspecialchars($site_name); ?> is running <a href="https://github.com/nilsding/justask">justask</a>, which is
-free software licensed under the <a href="http://www.gnu.org/licenses/agpl-3.0.html">GNU Affero General Public License
-version 3</a>.</p>
-</div>
-</body>
-</html>
+
+$pages = array();
+for ($i = 0; $i < $last_page; $i++) {
+  array_push($pages, "PAGE");
+}
+
+/* template thing */
+include 'include/rain.tpl.class.php';
+
+raintpl::configure("base_url", null);
+raintpl::configure("path_replace", false);
+raintpl::configure("tpl_dir", "themes/$current_theme/");
+
+$tpl = new RainTPL;
+
+$tpl->assign("pages", $pages);
+$tpl->assign("pagenum", $pagenum);
+$tpl->assign("gravatar", $gravatar);
+$tpl->assign("answers", $responses);
+$tpl->assign("user_name", $user_name);
+$tpl->assign("last_page", $last_page);
+$tpl->assign("file_name", "index.php");
+$tpl->assign("is_message", $is_message);
+$tpl->assign("current_theme", $current_theme);
+$tpl->assign("anon_questions", $anon_questions);
+$tpl->assign("page_self", $_SERVER['PHP_SELF']);
+$tpl->assign("logged_in", $_SESSION['logged_in']);
+$tpl->assign("site_name", htmlspecialchars($site_name));
+$tpl->assign("message", htmlspecialchars($message_text));
+$tpl->assign("user_gravatar_email", get_gravatar_url($user_gravatar_email, 48));
+
+$tpl->draw("answers");
+
+?>
