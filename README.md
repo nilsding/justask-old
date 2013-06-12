@@ -7,6 +7,8 @@ Think of it as viewing an user on one of these platforms
 * Ask questions
 * Ask questions anonymously
 * Use Gravatar for profile icons
+* Post new answers to Twitter
+* Themes!
 
 ## Requirements
 As always, a web server (any should work) with PHP5 and MySQL installed. I recommend using the latest version of everything.

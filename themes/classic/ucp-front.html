@@ -1,0 +1,3 @@
+{if="$is_message"}<p class="message">{$message}</p>{/if}
+<p><b>Welcome to justask, {$user_name}!</b></p>
+<p>So far, you have answered {$answer_count == 0 ? "no" : ($answer_count == 1 ? "one" : $answer_count)} question{$answer_count != 1 ? "s" : ""}!</p>

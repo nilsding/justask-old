@@ -1,0 +1,93 @@
+<h2>User details</h2>
+{if="$is_message"}<p class="message">{$message}</p>{/if}
+<form method="POST" action="ucp.php?change=userdetails">
+<label for="gravatar_email">Gravatar email address: </label><input type="text" name="gravatar_email" placeholder="Gravatar email address" value="{$user_gravatar_emailaddr}">
+<button class="nature">Save</button>
+</form>
+
+<h2>justask settings</h2>
+<p>These are settings for justask.</p>
+<form method="POST" action="ucp.php?change=justask">
+<table>
+<tr>
+<td><label for="jak_name">Name:</label></td>
+<td><input type="text" name="jak_name" value="{$site_name}"></td>
+<td class="info">This is the name used along the site.</td>
+</tr>
+<tr>
+<td><label for="jak_entriesperpage">Max. entries per page:</label></td>
+<td><input type="number" name="jak_entriesperpage" value="{$max_entries_per_page}"></td>
+<td class="info">How many questions/answers will be shown on each page?</td>
+</tr>
+<tr>
+<td><label for="jak_gravatar">Enable Gravatar:</label></td>
+<td><input type="checkbox" name="jak_gravatar"{$gravatar ? ' checked' : ''}></td>
+<td class="info">Allow people to use their Gravatar email address as a profile picture.</td>
+</tr>
+<tr>
+<td><label for="jak_twitter_on">Enable Twitter:</label></td>
+<td><input type="checkbox" name="jak_twitter_on"{$twitter_on ? ' checked' : ''}></td>
+<td class="info">Tweets a tweet automatically to Twitter.</td>
+</tr>
+<tr>
+<td><label for="jak_anonymous_questions">Allow anonymous questions?</label></td>
+<td><input type="checkbox" name="jak_anonymous_questions"{$anon_questions ? ' checked' : ''}></td>
+<td class="info">Allow people to ask you anonymous questions</td>
+</tr>
+<tr>
+<td><label for="jak_theme">Theme:</label></td>
+<td><select name="jak_theme">
+{loop="themes"}<option{if="$value == $current_theme"} selected{/if}>{$value}</option>{/loop}
+</select></td>
+<td class="info">The current theme.</td>
+</tr>
+</table>
+<button class="nature">Save</button>
+</form>
+
+{if="$twitter_on"}
+<h2>Posting to Twitter</h2>
+<form method="POST" action="ucp.php?change=twitter_signin">
+<button class="blue">Sign in with Twitter</button>
+</form>
+
+<form method="POST" action="ucp.php?change=twitter_tokens">
+<p>You may define your own access tokens here for promotional uses.</p>
+<table>
+<tr>
+<td><label for="ck">Consumer Key:</label></td>
+<td><input type="text" name="ck" value="{$twitter_ck}"></td>
+<td class="info">The consumer Key.</td>
+</tr>
+<tr>
+<td><label for="cs">Consumer Secret:</label></td>
+<td><input type="text" name="cs" value="{$twitter_cs}"></td>
+<td class="info">The consumer secret.</td>
+</tr>
+<tr>
+<td><label for="at">Access Token:</label></td>
+<td><input type="text" name="at" value="{$twitter_at}"></td>
+<td class="info">The access token.</td>
+</tr>
+<tr>
+<td><label for="ats">Access Token Secret:</label></td>
+<td><input type="text" name="ats" value="{$twitter_ats}"></td>
+<td class="info">The access token sectet.</td>
+</tr>
+<tr>
+<td><label for="callback">Callback URL:</label></td>
+<td><input type="text" name="callback" value="{$twitter_callback}"></td>
+<td class="info">The full URL to your <code>callback.php</code>.</td>
+</tr>
+</table>
+<button class="nature">Save</button>
+</form>
+{/if}
+
+<h2{if="$shouldchangepassanduser"} class="should_change"{/if}>Login details</h2>
+<p>Change your username and password here.</p>
+<form method="POST" action="ucp.php?change=logindata">
+<input type="text" name="username" placeholder="User name" value="{$user_name}"><br />
+<input type="password" name="passwd" placeholder="Password"><br />
+<button class="nature">Save</button>
+</form>

@@ -1,0 +1,20 @@
+<div class="question-box">
+<h2>Ask me a question!</h2>
+<form method="POST" action="ask.php">
+{if="$is_message"}<p class="message">{$message}</p>{/if}
+<textarea name="question" class="question-box-question">
+</textarea><br />
+<div class="question-box-data">
+<input type="text" name="asker_name" placeholder="Your name"><br />
+{if="$gravatar"}
+<input type="text" name="gravatar_address" placeholder="Your gravatar address">
+{/if}
+</div>
+{if="$anon_questions"}
+<div class="question-box-anon">
+<input type="checkbox" name="anonymous"> <label for="anonymous">Ask anonymously</label>
+</div>
+{/if}<br />
+<button>Ask!</button>
+</form>
+</div>
