@@ -36,6 +36,34 @@ if (!is_numeric($question_id)) {
   exit();
 }
 
+function generate_tweet_text(MySQLi $sql) {
+  $sql_str = "SELECT * FROM `jak_answers` ORDER BY `answer_id` DESC LIMIT 1"; /* we need the latest answer here... */
+  $res = $sql->query($sql_str);
+  $res = $res->fetch_assoc();
+  $answer_id = $res['answer_id'];
+  $question_content = $res['question_content'];
+  $answer = $res['answer_text'];
+  $url = 'http';
+  if ($_SERVER["HTTPS"] == "on") {
+    $url .= "s";
+  }
+  $url .= "://";
+  if ($_SERVER["SERVER_PORT"] != "80") {
+    $url .= $_SERVER["SERVER_NAME"].":".$_SERVER["SERVER_PORT"].$_SERVER["REQUEST_URI"];
+  } else {
+    $url .= $_SERVER["SERVER_NAME"].$_SERVER["REQUEST_URI"];
+  }
+  $url = substr($url, 0, (strlen($url) - strlen($_SERVER['SCRIPT_NAME'])));
+  $url .= "/view_answer.php?id=" . $answer_id;
+  if (strlen($question_content) > 56) {
+    $question_content = substr($question_content, 0, 55) . '…'; 
+  }
+  if (strlen($answer) > 56) {
+    $answer = substr($answer, 0, 55) . '…'; 
+  }
+  return $question_content . " — " . $answer . ' · ' . $url;
+}
+
 $sql = mysqli_connect($MYSQL_SERVER, $MYSQL_USER, $MYSQL_PASS, $MYSQL_DATABASE);
 
 $res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_twitter\'');
@@ -82,7 +110,6 @@ switch ($action) {
     if ($_POST['answer'] === '') {
       header('Location: ucp.php?p=inbox&m=3');
     }
-    if (true);
     
     $answer = $sql->real_escape_string($_POST['answer']);
     $sql_str = 'SELECT * FROM `' . $MYSQL_TABLE_PREFIX . 'inbox` WHERE `question_id`=' . $question_id;
@@ -110,34 +137,8 @@ switch ($action) {
     
     if ($twitter_on) {
       if (isset($_POST['post_to_twitter'])) {
-        $sql_str = "SELECT * FROM `jak_answers` ORDER BY `answer_id` DESC LIMIT 1"; /* we need the latest answer here... */
-        $res = $sql->query($sql_str);
-        $res = $res->fetch_assoc();
-        $answer_id = $res['answer_id'];
-        $question_content = $res['question_content'];
-        $answer = $res['answer_text'];
-        $url = 'http';
-        if ($_SERVER["HTTPS"] == "on") {
-          $url .= "s";
-        }
-        $url .= "://";
-        if ($_SERVER["SERVER_PORT"] != "80") {
-          $url .= $_SERVER["SERVER_NAME"].":".$_SERVER["SERVER_PORT"].$_SERVER["REQUEST_URI"];
-        } else {
-          $url .= $_SERVER["SERVER_NAME"].$_SERVER["REQUEST_URI"];
-        }
-        $url = substr($url, 0, (strlen($url) - strlen($_SERVER['SCRIPT_NAME'])));
-        $url .= "/view_answer.php?id=" . $answer_id;
-        if (strlen($question_content) > 56) {
-          $question_content = substr($question_content, 0, 55) . '…'; 
-        }
-        if (strlen($answer) > 56) {
-          $answer = substr($answer, 0, 55) . '…'; 
-        }
-        $tweet = $question_content . " — " . $answer . ' · ' . $url;
-        
         $connection = new TwitterOAuth($twitter_ck, $twitter_cs, $twitter_at, $twitter_ats);
-        $connection->post('statuses/update', array('status' => $tweet));
+        $connection->post('statuses/update', array('status' => generate_tweet_text($sql)));
       }
     }
     
