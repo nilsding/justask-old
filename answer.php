@@ -43,7 +43,7 @@ $res = $res->fetch_assoc();
 $twitter_on = ($res['config_value'] === "true" ? true : false);
 
 if ($twitter_on) {
-  include_once 'oauth/twitteroauth.php';
+  include_once 'include/oauth/twitteroauth.php';
   $res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_twitter_ck\'');
   $res = $res->fetch_assoc();
   $twitter_ck = $res['config_value'];
@@ -65,7 +65,7 @@ switch ($action) {
       header('Location: ucp.php?p=inbox&m=4');
       exit();
     }
-    header('Location: ucp.php?p=inbox&m=1');
+    header('Location: ucp.php?p=inbox&hm=1');
     break;
   case 'delete_answer':
     $sql_str = 'DELETE FROM `' . $MYSQL_TABLE_PREFIX . 'answers` WHERE `answer_id`=' . $question_id;

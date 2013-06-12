@@ -18,7 +18,7 @@ if (file_exists('config.php')) {
   header('Location: install.php');
   exit();
 }
-require_once('oauth/twitteroauth.php');
+require_once('include/oauth/twitteroauth.php');
 
 if (isset($_REQUEST['oauth_token']) && $_SESSION['oauth_token'] !== $_REQUEST['oauth_token']) {
   $_SESSION['oauth_status'] = 'oldtoken';
@@ -60,3 +60,5 @@ if (200 == $connection->http_code) {
 } else {
   header('Location: ./ucp.php?p=account&m=3');
 }
+?>
+You will be redirected...

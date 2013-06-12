@@ -23,7 +23,7 @@ $res = $res->fetch_assoc();
 $twitter_on = ($res['config_value'] === "true" ? true : false);
 
 if ($twitter_on) {
-  include_once 'oauth/twitteroauth.php';
+  include_once 'include/oauth/twitteroauth.php';
   $res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_twitter_ck\'');
   $res = $res->fetch_assoc();
   $twitter_ck = $res['config_value'];
