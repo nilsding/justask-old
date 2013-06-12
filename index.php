@@ -107,7 +107,10 @@ $max_sql_str_part_thing = ' LIMIT ' . ($pagenum - 1) * $max_entries_per_page . '
 $res = $sql->query('SELECT * FROM `' . $MYSQL_TABLE_PREFIX . 'answers` ORDER BY `answer_timestamp` DESC' . $max_sql_str_part_thing);
 
 $responses = array();
-
+if ($res->num_rows <= 0) {
+  $message_text = "No answers found :(";
+  $is_message = true;
+} else {
 while ($question = $res->fetch_assoc()) { 
   $question_time_answered = strtotime($question['answer_timestamp']);
   if ($question['asker_private']) {
@@ -120,6 +123,7 @@ while ($question = $res->fetch_assoc()) {
                                      "answer_text" => str_replace("\n", "<br />", htmlspecialchars($question['answer_text'])),
                           "question_time_answered" => htmlspecialchars(date('l jS F Y G:i', $question_time_answered)),
                                 "question_content" => str_replace("\n", "<br />", htmlspecialchars($question['question_content']))));
+}
 }
 
 $pages = array();
