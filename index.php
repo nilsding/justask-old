@@ -34,6 +34,8 @@ $user_name = $res['config_value'];
 $res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_user_gravatar\'');
 $res = $res->fetch_assoc();
 $user_gravatar_email = $res['config_value'];
+$res = $sql->query('SELECT * FROM `' . $MYSQL_TABLE_PREFIX . 'inbox`');
+$question_count = $res->num_rows;
 $res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_max_entries\'');
 $res = $res->fetch_assoc();
 if (!is_numeric($res['config_value'])) {
@@ -111,19 +113,19 @@ if ($res->num_rows <= 0) {
   $message_text = "No answers found :(";
   $is_message = true;
 } else {
-while ($question = $res->fetch_assoc()) { 
-  $question_time_answered = strtotime($question['answer_timestamp']);
-  if ($question['asker_private']) {
-    $question_asked_by = 'Anonymous';
-  } else {
-    $question_asked_by = htmlspecialchars($question['asker_name']);
+  while ($question = $res->fetch_assoc()) { 
+    $question_time_answered = strtotime($question['answer_timestamp']);
+    if ($question['asker_private']) {
+      $question_asked_by = 'Anonymous';
+    } else {
+      $question_asked_by = htmlspecialchars($question['asker_name']);
+    }
+    array_push($responses, array("question_asked_by" => htmlspecialchars($question_asked_by), 
+                                    "asker_gravatar" => get_gravatar_url($question['asker_gravatar'], 48),
+                                      "answer_text" => str_replace("\n", "<br />", htmlspecialchars($question['answer_text'])),
+                            "question_time_answered" => htmlspecialchars(date('l jS F Y G:i', $question_time_answered)),
+                                  "question_content" => str_replace("\n", "<br />", htmlspecialchars($question['question_content']))));
   }
-  array_push($responses, array("question_asked_by" => htmlspecialchars($question_asked_by), 
-                                  "asker_gravatar" => get_gravatar_url($question['asker_gravatar'], 48),
-                                     "answer_text" => str_replace("\n", "<br />", htmlspecialchars($question['answer_text'])),
-                          "question_time_answered" => htmlspecialchars(date('l jS F Y G:i', $question_time_answered)),
-                                "question_content" => str_replace("\n", "<br />", htmlspecialchars($question['question_content']))));
-}
 }
 
 $pages = array();
@@ -150,6 +152,7 @@ $tpl->assign("file_name", "index.php");
 $tpl->assign("is_message", $is_message);
 $tpl->assign("current_theme", $current_theme);
 $tpl->assign("anon_questions", $anon_questions);
+$tpl->assign("question_count", $question_count);
 $tpl->assign("page_self", $_SERVER['PHP_SELF']);
 $tpl->assign("logged_in", $_SESSION['logged_in']);
 $tpl->assign("site_name", htmlspecialchars($site_name));

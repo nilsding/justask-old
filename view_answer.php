@@ -28,6 +28,8 @@ $user_name = $res['config_value'];
 $res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_user_gravatar\'');
 $res = $res->fetch_assoc();
 $user_gravatar_email = $res['config_value'];
+$res = $sql->query('SELECT * FROM `' . $MYSQL_TABLE_PREFIX . 'inbox`');
+$question_count = $res->num_rows;
 $is_message = false;
 $message = "";
 
@@ -89,6 +91,7 @@ $tpl->assign("file_name", "update_jak.php");
 $tpl->assign("current_theme", $current_theme);
 $tpl->assign("page_self", $_SERVER['PHP_SELF']);
 $tpl->assign("anon_questions", $anon_questions);
+$tpl->assign("question_count", $question_count);
 $tpl->assign("logged_in", $_SESSION['logged_in']);
 $tpl->assign("site_name", htmlspecialchars($site_name));
 $tpl->assign("user_gravatar_email", get_gravatar_url($user_gravatar_email, 48));
