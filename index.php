@@ -115,6 +115,7 @@ if ($res->num_rows <= 0) {
 } else {
   while ($question = $res->fetch_assoc()) { 
     $question_time_answered = strtotime($question['answer_timestamp']);
+    $question_time_asked = strtotime($question['question_timestamp']);
     if ($question['asker_private']) {
       $question_asked_by = 'Anonymous';
     } else {
@@ -122,8 +123,9 @@ if ($res->num_rows <= 0) {
     }
     array_push($responses, array("question_asked_by" => htmlspecialchars($question_asked_by), 
                                     "asker_gravatar" => get_gravatar_url($question['asker_gravatar'], 48),
-                                      "answer_text" => str_replace("\n", "<br />", htmlspecialchars($question['answer_text'])),
+                                       "answer_text" => str_replace("\n", "<br />", htmlspecialchars($question['answer_text'])),
                             "question_time_answered" => htmlspecialchars(date('l jS F Y G:i', $question_time_answered)),
+                               "question_time_asked" => htmlspecialchars(date('l jS F Y G:i', $question_time_asked)),
                                   "question_content" => str_replace("\n", "<br />", htmlspecialchars($question['question_content']))));
   }
 }

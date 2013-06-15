@@ -6,6 +6,8 @@ if (file_exists('config.php')) {
   exit();
 }
 
+session_start();
+
 include 'gravatar.php';
 
 $sql = mysqli_connect($MYSQL_SERVER, $MYSQL_USER, $MYSQL_PASS, $MYSQL_DATABASE);
@@ -36,6 +38,7 @@ $message = "";
 $question_asked_by = "";
 $asker_gravatar = get_gravatar_url("", 48);
 $question_time_answered = "";
+$question_time_asked = "";
 $question_content = "";
 $answer_text = "";
 
@@ -60,6 +63,7 @@ if ($answer_id == false) {
       $question_asked_by = htmlspecialchars($question['asker_name']);
     }
     $question_time_answered = date('l jS F Y G:i', strtotime($question['answer_timestamp']));
+    $question_time_asked = date('l jS F Y G:i', strtotime($question['question_timestamp']));
     $asker_gravatar = get_gravatar_url($question['asker_gravatar'], 48);
     $question_content = str_replace("\n", "<br />", htmlspecialchars($question['question_content']));
     $answer_text = str_replace("\n", "<br />", htmlspecialchars($question['answer_text']));
@@ -78,6 +82,7 @@ $tpl->assign("answer_text", $answer_text);
 $tpl->assign("asker_gravatar", $asker_gravatar);
 $tpl->assign("question_content", $question_content);
 $tpl->assign("question_asked_by", $question_asked_by);
+$tpl->assign("question_time_asked", $question_time_asked);
 $tpl->assign("question_time_answered", $question_time_answered);
 $tpl->assign("ss_de", (substr($question_asked_by, -1, 1) === 's' ? "'" : "s"));
 $tpl->assign("ss_en", (substr($question_asked_by, -1, 1) === 's' ? "'" : "'s"));
