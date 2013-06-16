@@ -210,7 +210,7 @@ case "finish_2": ?>
     echo "<p>Oh and please ignore the following errors, if any. Thanks! :3</p>";
   }
   
-  $JUSTASK_CONFIG_VERSION = 3;
+  $JUSTASK_CONFIG_VERSION = 5;
   
   /* default twitter consumer keys */
   $JUSTASK_TWITTER_CK = "ABr5S6jAB4RQYFYWm5Sq";
