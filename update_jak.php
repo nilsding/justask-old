@@ -6,6 +6,8 @@ if (file_exists('config.php')) {
   exit();
 }
 
+session_start();
+
 function upgrade_to(MySQLi $sql, $ver, $MYSQL_TABLE_PREFIX, $content) {
   switch ($ver) {
     case 3:

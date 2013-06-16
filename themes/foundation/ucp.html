@@ -1,0 +1,41 @@
+{include="header"}
+<div class="row">
+  <div class="large-12 columns">
+    <div class="panel">
+{if="!$logged_in"}
+      <h1>Log in</h1>
+{else}
+      <h1>User control panel</h1>
+{/if}
+    </div>
+  </div>
+</div>
+<div class="row">
+{include="left-sidebar"}
+  
+  <div class="large-9 columns">
+{if="!$logged_in"}
+{include="ucp-login"}
+{else}
+  
+  {if="$shouldchangepassanduser"}
+    <div data-alert class="alert-box alert">
+      For security reasons, you should change your password and your user name immediately to something else.
+      <a href="#" class="close">&times;</a>
+    </div>
+  {/if}
+
+  {if="$current_page === 'front'"}
+    {include="ucp-front"}
+  {elseif="$current_page === 'inbox'"}
+    {include="ucp-inbox"}
+  {elseif="$current_page === 'answers'"}
+    {include="ucp-answers"}
+  {elseif="$current_page === 'settings'"}
+    {include="ucp-settings"}
+  {/if}
+
+{/if}
+  </div>
+</div>
+{include="footer"}

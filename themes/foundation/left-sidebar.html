@@ -1,0 +1,30 @@
+<div class="large-3 columns ">
+  <div class="panel">
+    <div class="section-container vertical-nav" data-section="vertical-nav" data-options="deep_linking: false; one_up: false">
+      <section class="section">
+        <div class="title"><a href="index.php">Main page</a></div>
+      </section>
+{if="!$logged_in"}
+      <section class="section">
+        <div class="title"><a href="ucp.php">Log in</a></div>
+      </section>
+{else}
+      <section class="section">
+        <div class="title"><a href="ucp.php?p=front">UCP front</a></div>
+      </section>
+      <section class="section">
+        <div class="title"><a href="ucp.php?p=inbox">Inbox{if="$question_count > 0"} ({$question_count}){/if}</a></div>
+      </section>
+      <section class="section">
+        <div class="title"><a href="ucp.php?p=answers">Answers</a></div>
+      </section>
+      <section class="section">
+        <div class="title"><a href="ucp.php?p=settings">Settings{if="$shouldchangepassanduser"} (!){/if}</a></div>
+      </section>
+      <section class="section">
+        <div class="title"><a href="ucp.php?p=logout">Logout</a></div>
+      </section>
+{/if}
+    </div>
+  </div>
+</div>

@@ -480,7 +480,7 @@ switch ($page) {
     
   case 'logout':
     session_destroy();
-    header('Location: ucp.php');
+    header('Location: index.php');
     exit();
     break;
   
@@ -496,7 +496,7 @@ switch ($page) {
         $message = "What the f- happened?";
         break;
       case '2':
-        $message = "<code>ucp.php</code> was renamed to <code>ucp.php</code>, please update your bookmarks!";
+        $message = "<code>usercfg.php</code> was renamed to <code>ucp.php</code>, please update your bookmarks!";
         break;
       default:
         $is_message = false;
