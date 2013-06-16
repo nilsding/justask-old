@@ -79,6 +79,11 @@
 <td><input type="text" name="callback" value="{$twitter_callback}"></td>
 <td class="info">The full URL to your <code>callback.php</code>.</td>
 </tr>
+<tr>
+<td><label for="default_check">Checkbox:</label></td>
+<td><input type="checkbox" name="default_check"{$twitter_check ? ' checked' : ''}></td>
+<td class="info">Is the "Post to Twitter" checkbox always checked?</td>
+</tr>
 </table>
 <button class="nature">Save</button>
 </form>

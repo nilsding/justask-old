@@ -6,7 +6,7 @@ if (file_exists('config.php')) {
   exit();
 }
 
-function upgrade_to(MySQLi $sql, $ver, $MYSQL_TABLE_PREFIX) {
+function upgrade_to(MySQLi $sql, $ver, $MYSQL_TABLE_PREFIX, $content) {
   switch ($ver) {
     case 3:
       /* new config values in config r3:
@@ -24,7 +24,7 @@ function upgrade_to(MySQLi $sql, $ver, $MYSQL_TABLE_PREFIX) {
       $JUSTASK_TWITTER_CS = "ICM7eKAlu6PSPysQr7Sim0uFT4HoqK7d5asEpW1Qd6";
       $JUSTASK_TWITTER_CALLBACK = "http://" . $_SERVER['HTTP_HOST'] . "/callback.php";
       
-      echo 'storing version value... ';
+      $content .= 'storing version value... ';
       $sql_str = 'INSERT INTO `' . $MYSQL_TABLE_PREFIX . 'config` (`config_id`, `config_value`) VALUES (\'version\', \'' . $JUSTASK_CONFIG_VERSION . '\');';
       if (!$sql->query($sql_str)) {
         if ($sql->errno == 1062) { 
@@ -33,34 +33,52 @@ function upgrade_to(MySQLi $sql, $ver, $MYSQL_TABLE_PREFIX) {
         }
       }
       
-      echo 'done<br />upgrading database... ';
+      $content .= 'done<br />upgrading database... ';
       $sql_str = 'INSERT INTO `' . $MYSQL_TABLE_PREFIX . 'config` (`config_id`, `config_value`) VALUES (\'cfg_twitter\', \'false\'), (\'cfg_twitter_ck\', \'' . 
         strrev($JUSTASK_TWITTER_CK) . '\'), (\'cfg_twitter_cs\', \'' . strrev($JUSTASK_TWITTER_CS) . '\'), (\'cfg_twitter_at\', \'\'), (\'cfg_twitter_ats\', \'' .
         '\'), (\'cfg_twitter_callbk\', \'' . $sql->real_escape_string($JUSTASK_TWITTER_CALLBACK) . '\');';
       if (!$sql->query($sql_str)) {
-        echo 'error<br />';
+        $content .= 'error<br />';
       } else {
-        echo 'done<br />';
+        $content .= 'done<br />';
       }
-      echo '<br />';
+      $content .= '<br />';
       break;
     case 4:
       /* new config values in config r4:
        * cfg_currtheme = current theme 
        */
       $JUSTASK_CONFIG_VERSION = 4;
-      echo 'updating version value... ';
+      $content .= 'updating version value... ';
       $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . $JUSTASK_CONFIG_VERSION . '\' WHERE `config_id`=\'version\'; ';
       $sql->query($sql_str);
       
-      echo 'done<br />upgrading database... ';
+      $content .= 'done<br />upgrading database... ';
       $sql_str = 'INSERT INTO `' . $MYSQL_TABLE_PREFIX . 'config` (`config_id`, `config_value`) VALUES (\'cfg_currtheme\', \'' . $sql->real_escape_string("classic") . '\');';
       if (!$sql->query($sql_str)) {
-        echo 'error<br />';
+        $content .= 'error<br />';
       } else {
-        echo 'done<br />';
+        $content .= 'done<br />';
       }
-      echo '<br />';
+      $content .= '<br />';
+      break;
+    case 5:
+      /* new config values in config r5:
+       * cfg_twitter_chk = is the checkbox "Post to twitter" on by default?
+       */
+      $JUSTASK_CONFIG_VERSION = 5;
+      $content .= 'updating version value... ';
+      $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . $JUSTASK_CONFIG_VERSION . '\' WHERE `config_id`=\'version\'; ';
+      $sql->query($sql_str);
+      
+      $content .= 'done<br />upgrading database... ';
+      $sql_str = 'INSERT INTO `' . $MYSQL_TABLE_PREFIX . 'config` (`config_id`, `config_value`) VALUES (\'cfg_twitter_chk\', \'' . $sql->real_escape_string("true") . '\');';
+      if (!$sql->query($sql_str)) {
+        $content .= 'error<br />';
+      } else {
+        $content .= 'done<br />';
+      }
+      $content .= '<br />';
       break;
     default:
       die("Unknown \$ver given!");
@@ -101,18 +119,27 @@ $config_version = $res['config_value'];
 
 switch ($config_version) {
   case 3:
-    $content .= "<p>upgrading to <strong>r4</strong>...<br />";
+    $content .= "<p>upgrading to <strong>r5/strong>...<br />";
     upgrade_to($sql, 4, $MYSQL_TABLE_PREFIX);
+    $content .= "<strong>r4 → r5</strong><br />";
+    upgrade_to($sql, 5, $MYSQL_TABLE_PREFIX);
     $content .= "Perfect.</p>";
     break;
   case 4:
+    $content .= "<p>upgrading to <strong>r5</strong>...<br />";
+    upgrade_to($sql, 5, $MYSQL_TABLE_PREFIX);
+    $content .= "Perfect.</p>";
+    break;
+  case 5:
     $content .= "<p>Your config is already up to date.</p>";
     break;
   default:
-    $content .= "<p>upgrading to <strong>r4</strong>...<br />";
+    $content .= "<p>upgrading to <strong>r5</strong>...<br />";
     upgrade_to($sql, 3, $MYSQL_TABLE_PREFIX);
-    $content .= "<strong>r3 → r4</strong><br /><br />";
+    $content .= "<strong>r3 → r4</strong><br />";
     upgrade_to($sql, 4, $MYSQL_TABLE_PREFIX);
+    $content .= "<strong>r4 → r5</strong><br /><br />";
+    upgrade_to($sql, 5, $MYSQL_TABLE_PREFIX);
     $content .= "Perfect.</p>";
 }
 

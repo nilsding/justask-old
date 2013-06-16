@@ -182,6 +182,11 @@ if (isset($_GET['change'])) {
         exit();
       }
      /* ck, cs, at, ats, callback */
+      if (!isset($_POST['default_check'])) {
+        $default_check = false;
+      } else {
+        $default_check = true;
+      }
 
     if (isset($_POST['ck'])) {
       $s = $sql->real_escape_string($_POST['ck']);
@@ -208,6 +213,8 @@ if (isset($_GET['change'])) {
       $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . $s . '\' WHERE `config_id`=\'cfg_twitter_callbk\';';
       $sql->query($sql_str);
     }
+    $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . ($default_check ? "true" : "false") . '\' WHERE `config_id`=\'cfg_twitter_chk\';';
+    $sql->query($sql_str);
     
     header('Location: ucp.php?p=account&m=1');
     break;
@@ -260,6 +267,9 @@ $gravatar = ($res['config_value'] === 'true' ? true : false);
 $res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_anon_questions\'');
 $res = $res->fetch_assoc();
 $anon_questions = ($res['config_value'] === 'true' ? true : false);
+$res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_twitter_chk\'');
+$res = $res->fetch_assoc();
+$twitter_check = ($res['config_value'] === 'true' ? true : false);
 $res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_username\'');
 $res = $res->fetch_assoc();
 $user_name = $res['config_value'];
@@ -530,6 +540,7 @@ $tpl->assign("twitter_at", $twitter_at);
 $tpl->assign("twitter_on", $twitter_on);
 $tpl->assign("twitter_ats", $twitter_ats);
 $tpl->assign("answer_count", $answer_count);
+$tpl->assign("twitter_check", $twitter_check);
 $tpl->assign("current_theme", $current_theme);
 $tpl->assign("question_count", $question_count);
 $tpl->assign("page_self", $_SERVER['PHP_SELF']);
