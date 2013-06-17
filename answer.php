@@ -36,8 +36,8 @@ if (!is_numeric($question_id)) {
   exit();
 }
 
-function generate_tweet_text(MySQLi $sql) {
-  $sql_str = "SELECT * FROM `jak_answers` ORDER BY `answer_id` DESC LIMIT 1"; /* we need the latest answer here... */
+function generate_tweet_text(MySQLi $sql, $MYSQL_TABLE_PREFIX) {
+  $sql_str = "SELECT * FROM `" . $MYSQL_TABLE_PREFIX . "answers` ORDER BY `answer_id` DESC LIMIT 1"; /* we need the latest answer here... */
   $res = $sql->query($sql_str);
   $res = $res->fetch_assoc();
   $answer_id = $res['answer_id'];
@@ -138,7 +138,8 @@ switch ($action) {
     if ($twitter_on) {
       if (isset($_POST['post_to_twitter'])) {
         $connection = new TwitterOAuth($twitter_ck, $twitter_cs, $twitter_at, $twitter_ats);
-        $connection->post('statuses/update', array('status' => generate_tweet_text($sql)));
+        $status = generate_tweet_text($sql, $MYSQL_TABLE_PREFIX);
+        $connection->post('statuses/update', array('status' => $status));
       }
     }
     
