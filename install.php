@@ -173,12 +173,21 @@ $content .= "\$MYSQL_USER = \"" . $_GET['mysql_user'] . "\";\n";
 $content .= "\$MYSQL_PASS = \"" . $_GET['mysql_pass'] . "\";\n";
 $content .= "\$MYSQL_DATABASE = \"" . $_GET['mysql_database'] . "\";\n";
 $content .= "\$MYSQL_TABLE_PREFIX = \"" . $_GET['mysql_prefix'] . "\";\n";
+
+if(file_put_contents('./config.php', $content)) {
+?>
+<p>We've created your config file. You are almost ready to go.</p>
+<?php
+} else {
 ?>
 <textarea rows="10" cols="60">
 <?php echo $content; ?>
 </textarea>
 <p>Please copy and paste the contents of the above box into a new file which is named config.php.<br />
-(This step will be automated in near future.)</p>
+If your config-file would've been writable, we'd done this for you.</p>
+<?php
+}
+?>
 <input type="hidden" name="p" value="finish_2">
 <button>Next step</button>
 </form>
