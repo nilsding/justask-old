@@ -185,6 +185,10 @@ if (isset($_GET['change'])) {
 
       break;
     case 'twitter_tokens':
+      if (!isset($_SESSION['logged_in']) || !isset($_SESSION['user'])) {
+        header('Location: ucp.php');
+        exit();
+      }
       if (!$twitter_on) {
         header('Location: ucp.php?p=account&m=4');
         exit();
@@ -226,8 +230,46 @@ if (isset($_GET['change'])) {
     
     header('Location: ucp.php?p=account&m=1');
     break;
+    
+    case 'tweet':
+    if (!isset($_SESSION['logged_in']) || !isset($_SESSION['user'])) {
+      header('Location: ucp.php');
+      exit();
+    }
+    
+    if (!$twitter_on) {
+      header('Location: ucp.php?p=front&m=3');
+      exit();
+    }
+    
+    if (!isset($_POST['tweet_text'])) {
+      header('Location: ucp.php?p=front&m=7');
+      exit();
+    }
+    $tweet_text = trim($_POST['tweet_text']);
+    
+    $tweet_text_c = preg_replace("/http:\/\/([\w\.]*)/", "http://t.co/xxxxxxxxxx", $tweet_text);
+    $tweet_text_c = preg_replace("/https:\/\/([\w\.]*)/", "https://t.co/xxxxxxxxxx", $tweet_text_c);
+    
+    if (strlen($tweet_text_c) > 140) {
+      header('Location: ucp.php?p=front&m=6');
+      exit();
+    }
+    if (strlen($tweet_text_c) == 0) {
+      header('Location: ucp.php?p=front&m=7');
+      exit();
+    }
+    
+    $connection = new TwitterOAuth($twitter_ck, $twitter_cs, $twitter_at, $twitter_ats);
+    $res = $connection->post('statuses/update', array('status' => $tweet_text));
+    
+    if (isset($res->errors)) {
+      header('Location: ucp.php?p=front&m=5');
+      exit();
+    }
+    header('Location: ucp.php?p=front&m=4');
+    break;
   }
-//   header('Location: ucp.php');
   exit();
 }
 
@@ -325,6 +367,8 @@ if (!isset($_GET['p'])) {
 } else {
   $page = $_GET['p'];
 }
+
+$url = "http" . ($_SERVER["HTTPS"] == "on" ? 's' : '') . "://" . $_SERVER['HTTP_HOST'];
 
 $last_page = 1;
 $add_params = "";
@@ -513,6 +557,21 @@ switch ($page) {
       case '2':
         $message = "<code>usercfg.php</code> was renamed to <code>ucp.php</code>, please update your bookmarks!";
         break;
+      case '3': 
+        $message = "To do that, you need to have The Twitter.";
+        break;
+      case '4': 
+        $message = "Successfully posted tweet!";
+        break;
+      case '5': 
+        $message = "There was a problem posting your tweet!";
+        break;
+      case '6': 
+        $message = "The tweet you were trying to send was longer than 140 characters.";
+        break;
+      case '7': 
+        $message = "The tweet you were trying to send was empty.";
+        break;
       default:
         $is_message = false;
     }
@@ -535,6 +594,7 @@ $menu = array(array("text" => "Main page", "url" => "ucp.php?p=front"),
 
 $tpl = new RainTPL;
 
+$tpl->assign("url", $url);
 $tpl->assign("pages", $pages);
 $tpl->assign("ucp_menu", $menu);
 $tpl->assign("themes", $themes);

@@ -7,3 +7,25 @@
 
 <p><b>Welcome to justask, {$user_name}!</b></p>
 <p>So far, you have answered {$answer_count == 0 ? "no" : ($answer_count == 1 ? "one" : $answer_count)} question{$answer_count != 1 ? "s" : ""}!</p>
+
+{if="$twitter_on"}
+<hr />
+<form class="custom" method="POST" action="ucp.php?change=tweet">
+  <div class="row">
+    <div class="small-12">
+      <div class="row">
+        <div class="small-1 columns">&nbsp;</div>
+        <div class="small-8 columns">
+          <input type="text" id="tweet_text" name="tweet_text" value="Ask me anything! · {$url}">
+        </div>
+        <div class="small-2 columns">
+          <button class="small secondary button">Tweet</button>
+        </div>
+        <div class="small-1 columns">&nbsp;</div>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+  </div>
+</form>
+{/if}
