@@ -106,6 +106,21 @@
     <div class="small-8">
       <div class="row">
         <div class="small-4 columns">
+          <label for="jak_show_id" class="right inline">
+            <span data-tooltip class="has-tip" title="Show a (generated) user ID next to each name (where possible)">Show User ID</span>
+          </label>
+        </div>
+        <div class="small-8 columns">
+          <input type="checkbox" id="jak_show_id" name="jak_show_id" style="display: none;"{$show_id ? ' checked' : ''}>
+          <span class="custom checkbox"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="small-8">
+      <div class="row">
+        <div class="small-4 columns">
           <label for="jak_name" class="right inline">
             <span data-tooltip class="has-tip" title="The current theme.">Theme</span>
           </label>

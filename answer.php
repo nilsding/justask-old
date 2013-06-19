@@ -119,13 +119,14 @@ switch ($action) {
     $question_content = $sql->real_escape_string($res['question_content']);
     $asker_name = $sql->real_escape_string($res['asker_name']);
     $asker_gravatar = $sql->real_escape_string($res['asker_gravatar']);
+    $asker_id = $sql->real_escape_string($res['asker_id']);
     $asker_private = $res['asker_private'];
     $question_timestamp = $res['question_timestamp'];
     
     $sql_str = 'INSERT INTO `' . $MYSQL_TABLE_PREFIX . 'answers` (`question_content`, `asker_name`, ' .
-    '`asker_gravatar`, `asker_private`, `question_timestamp`, `answer_text`) VALUES (\'' . $question_content . 
+    '`asker_gravatar`, `asker_private`, `question_timestamp`, `answer_text`, `asker_id`) VALUES (\'' . $question_content . 
     '\', \'' . $asker_name . '\', \'' . $asker_gravatar . '\', \'' . $asker_private . '\', \'' . $question_timestamp . 
-    '\', \'' . $answer . '\');';
+    '\', \'' . $answer . '\', \'' . $asker_id . '\');';
     
     if (!$sql->query($sql_str)) {
       header('Location: ucp.php?p=inbox&m=4');

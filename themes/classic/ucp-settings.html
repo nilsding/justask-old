@@ -35,6 +35,11 @@
 <td class="info">Allow people to ask you anonymous questions</td>
 </tr>
 <tr>
+<td><label for="jak_show_id">Show User ID</label></td>
+<td><input type="checkbox" name="jak_show_id"{$show_id ? ' checked' : ''}></td>
+<td class="info">Show a (generated) user ID next to each name (where possible)</td>
+</tr>
+<tr>
 <td><label for="jak_theme">Theme:</label></td>
 <td><select name="jak_theme">
 {loop="themes"}<option{if="$value == $current_theme"} selected{/if}>{$value}</option>{/loop}

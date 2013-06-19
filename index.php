@@ -36,6 +36,9 @@ $res = $res->fetch_assoc();
 $user_gravatar_email = $res['config_value'];
 $res = $sql->query('SELECT * FROM `' . $MYSQL_TABLE_PREFIX . 'inbox`');
 $question_count = $res->num_rows;
+$res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_show_user_id\'');
+$res = $res->fetch_assoc();
+$show_user_id = ($res['config_value'] === "true" ? true : false);
 $res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_max_entries\'');
 $res = $res->fetch_assoc();
 if (!is_numeric($res['config_value'])) {
@@ -126,13 +129,19 @@ if ($res->num_rows <= 0) {
                                        "answer_text" => str_replace("\n", "<br />", htmlspecialchars($question['answer_text'])),
                             "question_time_answered" => htmlspecialchars(date('l jS F Y G:i', $question_time_answered)),
                                "question_time_asked" => htmlspecialchars(date('l jS F Y G:i', $question_time_asked)),
-                                  "question_content" => str_replace("\n", "<br />", htmlspecialchars($question['question_content']))));
+                                  "question_content" => str_replace("\n", "<br />", htmlspecialchars($question['question_content'])),
+                                          "asker_id" => htmlspecialchars(strlen(trim($question['asker_id'])) == 0 ? "none" : $question['asker_id'])));
   }
 }
 
 $pages = array();
 for ($i = 0; $i < $last_page; $i++) {
   array_push($pages, "PAGE");
+}
+
+if (!isset($_SESSION['u_id'])) {
+  $n = rand(ip2long($_SERVER['REMOTE_ADDR']), 10e20);
+  $_SESSION['u_id'] = base_convert($n, 10, 36);
 }
 
 /* template thing */
@@ -150,7 +159,9 @@ $tpl->assign("gravatar", $gravatar);
 $tpl->assign("answers", $responses);
 $tpl->assign("user_name", $user_name);
 $tpl->assign("last_page", $last_page);
+$tpl->assign("show_id", $show_user_id);
 $tpl->assign("file_name", "index.php");
+$tpl->assign("u_id", $_SESSION['u_id']);
 $tpl->assign("is_message", $is_message);
 $tpl->assign("current_theme", $current_theme);
 $tpl->assign("anon_questions", $anon_questions);

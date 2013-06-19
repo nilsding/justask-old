@@ -18,7 +18,7 @@
   <div class="row">
     <div class="large-2 columns small-2"><img class="max-48px" src="{$value.asker_gravatar}" /></div>
     <div class="large-10 columns">
-      <p><strong>{$value.question_asked_by} asked:</strong><br />{$value.question_content}</p>
+      <p><strong>{$value.question_asked_by}{if="$show_id"}</strong> (ID: {$value.asker_id})<strong>{/if} asked:</strong><br />{$value.question_content}</p>
       <ul class="inline-list">
         <li style="color: #6f6f6f;">{$value.question_time_asked}</li>
       </ul>

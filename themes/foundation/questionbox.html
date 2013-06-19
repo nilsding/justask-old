@@ -1,4 +1,7 @@
 <form class="custom" method="POST" action="ask.php">
+{if="$show_id"}
+  <input type="hidden" name="asker_id" value="{$u_id}" />
+{/if}
   <div class="row">
     <div class="large-12 columns">
       <textarea id="question" name="question" placeholder="Ask me something…"></textarea>

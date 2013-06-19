@@ -30,6 +30,9 @@ $user_name = $res['config_value'];
 $res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_user_gravatar\'');
 $res = $res->fetch_assoc();
 $user_gravatar_email = $res['config_value'];
+$res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_show_user_id\'');
+$res = $res->fetch_assoc();
+$show_user_id = ($res['config_value'] === "true" ? true : false);
 $res = $sql->query('SELECT * FROM `' . $MYSQL_TABLE_PREFIX . 'inbox`');
 $question_count = $res->num_rows;
 $is_message = false;
@@ -67,6 +70,7 @@ if ($answer_id == false) {
     $asker_gravatar = get_gravatar_url($question['asker_gravatar'], 48);
     $question_content = str_replace("\n", "<br />", htmlspecialchars($question['question_content']));
     $answer_text = str_replace("\n", "<br />", htmlspecialchars($question['answer_text']));
+    $asker_id = htmlspecialchars(strlen(trim($question['asker_id'])) == 0 ? "none" : $question['asker_id']);
   }
 }
 
@@ -78,6 +82,8 @@ raintpl::configure("tpl_dir", "themes/$current_theme/");
 
 $tpl = new RainTPL;
 
+$tpl->assign("asker_id", $asker_id);
+$tpl->assign("show_id", $show_user_id);
 $tpl->assign("answer_text", $answer_text);
 $tpl->assign("asker_gravatar", $asker_gravatar);
 $tpl->assign("question_content", $question_content);

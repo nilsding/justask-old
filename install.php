@@ -333,8 +333,8 @@ case "finish_2": ?>
   $sql_str = 'CREATE TABLE IF NOT EXISTS `' . $MYSQL_TABLE_PREFIX . 'inbox` (`question_id` int(11) NOT NULL AUTO_INCREMENT, ' . 
     '`question_content` text COLLATE utf8_unicode_ci NOT NULL, `asker_name` varchar(100) COLLATE utf8_unicode_ci NOT NULL, ' .
     '`asker_gravatar` varchar(100) COLLATE utf8_unicode_ci NOT NULL, `asker_private` tinyint(1) NOT NULL, ' .
-    '`question_timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`question_id`)) DEFAULT CHARSET=utf8 ' .
-    'COLLATE=utf8_unicode_ci AUTO_INCREMENT=1 ;';
+    '`question_timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP, `asker_id` text COLLATE utf8_unicode_ci NOT NULL, ' .
+    'PRIMARY KEY (`question_id`)) DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1 ;';
   
   if (!$sql->query($sql_str)) {
     echo "<p>The query <code>$sql_str</code> failed! :(</p>";
@@ -347,7 +347,8 @@ case "finish_2": ?>
     '`question_content` text COLLATE utf8_unicode_ci NOT NULL, `asker_name` varchar(100) COLLATE utf8_unicode_ci NOT NULL, ' . 
     '`asker_gravatar` varchar(100) COLLATE utf8_unicode_ci NOT NULL, `asker_private` tinyint(1) NOT NULL, `question_timestamp` ' . 
     'datetime NOT NULL, `answer_timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,`answer_text` text COLLATE utf8_unicode_ci NOT NULL, ' . 
-    'PRIMARY KEY (`answer_id`) ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1 ;';
+    '`asker_id` text COLLATE utf8_unicode_ci NOT NULL, PRIMARY KEY (`answer_id`) ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci ' .
+    'AUTO_INCREMENT=1 ;';
     
   if (!$sql->query($sql_str)) {
     echo "<p>The query <code>$sql_str</code> failed! :(</p>";

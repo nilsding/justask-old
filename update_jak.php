@@ -8,7 +8,7 @@ if (file_exists('config.php')) {
 
 session_start();
 
-function upgrade_to(MySQLi $sql, $ver, $MYSQL_TABLE_PREFIX, $content) {
+function upgrade_to(MySQLi $sql, $ver, $MYSQL_TABLE_PREFIX, &$content) {
   switch ($ver) {
     case 3:
       /* new config values in config r3:
@@ -82,6 +82,45 @@ function upgrade_to(MySQLi $sql, $ver, $MYSQL_TABLE_PREFIX, $content) {
       }
       $content .= '<br />';
       break;
+    case 6:
+      /* new values in r6:
+       * _inbox and _answers become a new `asker_id` column
+       * 
+       * cfg_show_user_id = show (generated) user id in inbox and answers
+       */
+       
+      $JUSTASK_CONFIG_VERSION = 6;
+      $content .= 'updating version value... ';
+      $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . $JUSTASK_CONFIG_VERSION . '\' WHERE `config_id`=\'version\'; ';
+      $sql->query($sql_str);
+      
+      $content .= 'done<br />upgrading database... <br />';
+      
+      $content .= 'modifying ' . $MYSQL_TABLE_PREFIX . 'inbox... ';
+      $sql_str = 'ALTER TABLE `' . $MYSQL_TABLE_PREFIX . 'inbox` ADD `asker_id` TEXT NOT NULL;';
+      if (!$sql->query($sql_str)) {
+        $content .= 'error<br />';
+      } else {
+        $content .= 'done<br />';
+      }
+      
+      $content .= 'modifying ' . $MYSQL_TABLE_PREFIX . 'answers... ';
+      $sql_str = 'ALTER TABLE `' . $MYSQL_TABLE_PREFIX . 'answers` ADD `asker_id` TEXT NOT NULL;';
+      if (!$sql->query($sql_str)) {
+        $content .= 'error<br />';
+      } else {
+        $content .= 'done<br />';
+      }
+      
+      $content .= 'adding new config value... ';
+      $sql_str = 'INSERT INTO `' . $MYSQL_TABLE_PREFIX . 'config` (`config_id`, `config_value`) VALUES (\'cfg_show_user_id\', \'' . $sql->real_escape_string("true") . '\');';
+      if (!$sql->query($sql_str)) {
+        $content .= 'error<br />';
+      } else {
+        $content .= 'done<br />';
+      }
+      $content .= '<br />';
+      break;
     default:
       die("Unknown \$ver given!");
   }
@@ -121,27 +160,38 @@ $config_version = $res['config_value'];
 
 switch ($config_version) {
   case 3:
-    $content .= "<p>upgrading to <strong>r5/strong>...<br />";
-    upgrade_to($sql, 4, $MYSQL_TABLE_PREFIX);
+    $content .= "<p>upgrading to <strong>r5</strong>...<br />";
+    upgrade_to($sql, 4, $MYSQL_TABLE_PREFIX, $content);
     $content .= "<strong>r4 → r5</strong><br />";
-    upgrade_to($sql, 5, $MYSQL_TABLE_PREFIX);
+    upgrade_to($sql, 5, $MYSQL_TABLE_PREFIX, $content);
+    $content .= "<strong>r5 → r6</strong><br />";
+    upgrade_to($sql, 6, $MYSQL_TABLE_PREFIX, $content);
     $content .= "Perfect.</p>";
     break;
   case 4:
     $content .= "<p>upgrading to <strong>r5</strong>...<br />";
-    upgrade_to($sql, 5, $MYSQL_TABLE_PREFIX);
+    upgrade_to($sql, 5, $MYSQL_TABLE_PREFIX, $content);
+    $content .= "<strong>r5 → r6</strong><br />";
+    upgrade_to($sql, 6, $MYSQL_TABLE_PREFIX, $content);
     $content .= "Perfect.</p>";
     break;
   case 5:
+    $content .= "<p>upgrading to <strong>r6</strong>...<br />";
+    upgrade_to($sql, 6, $MYSQL_TABLE_PREFIX, $content);
+    $content .= "Perfect.</p>";
+    break;
+  case 6:
     $content .= "<p>Your config is already up to date.</p>";
     break;
   default:
-    $content .= "<p>upgrading to <strong>r5</strong>...<br />";
-    upgrade_to($sql, 3, $MYSQL_TABLE_PREFIX);
+    $content .= "<p>upgrading to <strong>r6</strong>...<br />";
+    upgrade_to($sql, 3, $MYSQL_TABLE_PREFIX, $content);
     $content .= "<strong>r3 → r4</strong><br />";
-    upgrade_to($sql, 4, $MYSQL_TABLE_PREFIX);
+    upgrade_to($sql, 4, $MYSQL_TABLE_PREFIX, $content);
     $content .= "<strong>r4 → r5</strong><br /><br />";
-    upgrade_to($sql, 5, $MYSQL_TABLE_PREFIX);
+    upgrade_to($sql, 5, $MYSQL_TABLE_PREFIX, $content);
+    $content .= "<strong>r5 → r6</strong><br />";
+    upgrade_to($sql, 6, $MYSQL_TABLE_PREFIX, $content);
     $content .= "Perfect.</p>";
 }
 

@@ -135,6 +135,12 @@ if (isset($_GET['change'])) {
         $jak_theme = $sql->real_escape_string($_POST['jak_theme']);
       }
       
+      if (!isset($_POST['jak_show_id'])) {
+        $jak_show_id = false;
+      } else {
+        $jak_show_id = true;
+      }
+      
       $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . $sql->real_escape_string($jak_name) . '\' WHERE `config_id`=\'cfg_sitename\'; ';
 //       if (!$sql->query($sql_str)) {
 //         die('rip in pizza');
@@ -142,13 +148,15 @@ if (isset($_GET['change'])) {
       $sql->query($sql_str);
       $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . ($jak_gravatar ? "true" : "false") . '\' WHERE `config_id`=\'cfg_gravatar\'; ';
       $sql->query($sql_str);
-      $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . ($jak_anonymous_questions ? "true" : "false"). '\' WHERE `config_id`=\'cfg_anon_questions\';';
+      $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . ($jak_anonymous_questions ? "true" : "false") . '\' WHERE `config_id`=\'cfg_anon_questions\';';
       $sql->query($sql_str);
       $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . $jak_entriesperpage . '\' WHERE `config_id`=\'cfg_max_entries\';';
       $sql->query($sql_str);
       $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . ($twitter_on ? "true" : "false") . '\' WHERE `config_id`=\'cfg_twitter\';';
       $sql->query($sql_str);
       $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . $jak_theme . '\' WHERE `config_id`=\'cfg_currtheme\';';
+      $sql->query($sql_str);
+      $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . ($jak_show_id ? "true" : "false") . '\' WHERE `config_id`=\'cfg_show_user_id\';';
       $sql->query($sql_str);
       
       header('Location: ucp.php?p=account&m=1');
@@ -276,6 +284,9 @@ $user_name = $res['config_value'];
 $res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_user_gravatar\'');
 $res = $res->fetch_assoc();
 $user_gravatar_email = $res['config_value'];
+$res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_show_user_id\'');
+$res = $res->fetch_assoc();
+$show_user_id = ($res['config_value'] === "true" ? true : false);
 
 $res = $sql->query('SELECT * FROM `' . $MYSQL_TABLE_PREFIX . 'inbox`');
 $question_count = $res->num_rows;
@@ -373,7 +384,9 @@ switch ($page) {
                                         "asker_gravatar" => get_gravatar_url($question['asker_gravatar'], 48),
                                    "question_time_asked" => htmlspecialchars(date('l jS F Y G:i', $question_time_asked)),
                                       "question_content" => str_replace("\n", "<br />", htmlspecialchars($question['question_content'])),
-                                           "question_id" => $question['question_id']));
+                                              "asker_id" => htmlspecialchars(strlen(trim($question['asker_id'])) == 0 ? "none" : $question['asker_id']),
+                                           "question_id" => $question['question_id'],
+                                         "asker_private" => $question['asker_private']));
       }
       for ($i = 0; $i < $last_page; $i++) {
         array_push($pages, "PAGE");
@@ -426,7 +439,9 @@ switch ($page) {
                                 "question_time_answered" => htmlspecialchars(date('l jS F Y G:i', $question_time_answered)),
                                    "question_time_asked" => htmlspecialchars(date('l jS F Y G:i', $question_time_asked)),
                                       "question_content" => str_replace("\n", "<br />", htmlspecialchars($question['question_content'])),
-                                             "answer_id" => $question['answer_id']));
+                                              "asker_id" => htmlspecialchars(strlen(trim($question['asker_id'])) == 0 ? "none" : $question['asker_id']),
+                                             "answer_id" => $question['answer_id'],
+                                         "asker_private" => $question['asker_private']));
       }
       for ($i = 0; $i < $last_page; $i++) {
         array_push($pages, "PAGE");
@@ -532,6 +547,7 @@ $tpl->assign("file_name", "ucp.php");
 $tpl->assign("last_page", $last_page);
 $tpl->assign("questions", $questions);
 $tpl->assign("user_name", $user_name);
+$tpl->assign("show_id", $show_user_id);
 $tpl->assign("add_params", $add_params);
 $tpl->assign("is_message", $is_message);
 $tpl->assign("twitter_ck", $twitter_ck);
