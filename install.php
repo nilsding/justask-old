@@ -10,6 +10,9 @@ if (isset($_GET['p'])) {
 } else {
   $page = "start";
 }
+if (file_exists('config.php')) {
+  $page = 'config_already_exists';
+}
 ?>
 <!DOCTYPE html>
 <html>
@@ -356,7 +359,24 @@ case "finish_2": ?>
   <?php
 }
 ?>
-<?php  } ?>
+<?php  
+break;
+case 'config_already_exists': 
+include_once 'config.php';
+$sql = mysqli_connect($MYSQL_SERVER, $MYSQL_USER, $MYSQL_PASS, $MYSQL_DATABASE);
+?>
+<p>The <code>config.php</code> file already exists.</p> 
+<?php
+if ($sql->connect_errno) {
+  echo "<p>However, the connection to the database could not be made because of reasons.</p>";
+  echo "<p>The error was <strong>". $sql->connect_error ."</strong> (" . $sql->connect_errno . ") </p>";
+  echo "<p>Please edit the config.php file again or delete it and run the installer again.</p>";
+} else {
+  echo "<p>The database connection seems to work, too.</p>";
+}
+?>
+<?php
+break; } ?>
 <hr />
 <div class="footer">
 <p style="font-size: small;"><?php echo (isset($_SESSION['jak_name']) ? $_SESSION['jak_name'] : "This page"); ?> is running <a href="https://github.com/nilsding/justask">justask</a>, which is
