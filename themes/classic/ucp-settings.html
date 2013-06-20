@@ -5,6 +5,19 @@
 <button class="nature">Save</button>
 </form>
 
+<h4>API</h4>
+<table>
+<tr>
+<td><label for="jak_name">API Key</label></td>
+<td><input type="text" readonly="readonly" name="api_key" value="{$api_key}"></td>
+<td class="info">Some applications may use this key along with your user name.</td>
+</tr>
+</table>
+<form class="custom" method="POST" action="ucp.php?change=generate_api_key">
+<button>Generate new API key</button>
+</form>
+Developers may want to read the <a href="https://github.com/nilsding/justask/wiki/API-documentation">API Documentation</a> (work in progress).
+
 <h2>justask settings</h2>
 <p>These are settings for justask.</p>
 <form method="POST" action="ucp.php?change=justask">

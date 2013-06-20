@@ -42,12 +42,12 @@ if ($twitter_on) {
 }
 
 if (isset($_GET['change'])) {
+  if (!isset($_SESSION['logged_in']) || !isset($_SESSION['user'])) {
+    header('Location: ucp.php');
+    exit();
+  }
   switch ($_GET['change']) {
     case 'logindata':
-      if (!isset($_SESSION['logged_in']) || !isset($_SESSION['user'])) {
-        header('Location: ucp.php');
-        exit();
-      }
       if (!isset($_POST['username']) || !isset($_POST['passwd'])) {
         header('Location: ucp.php?p=account');
         exit();
@@ -182,13 +182,21 @@ if (isset($_GET['change'])) {
           header('Location: ucp.php?p=account&m=3');
           exit();
       }
-
       break;
-    case 'twitter_tokens':
-      if (!isset($_SESSION['logged_in']) || !isset($_SESSION['user'])) {
-        header('Location: ucp.php');
+      
+    case 'generate_api_key':
+      $api_key = substr(str_shuffle(str_repeat('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',5)),0,12);;
+      $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . $sql->real_escape_string($api_key) . '\' WHERE `config_id`=\'cfg_api_key\';';
+      if (!$sql->query($sql_str)) {
+        header('Location: ucp.php?p=account&m=7');
+        exit();
+      } else {
+        header('Location: ucp.php?p=account&m=6');
         exit();
       }
+      break;
+      
+    case 'twitter_tokens':
       if (!$twitter_on) {
         header('Location: ucp.php?p=account&m=4');
         exit();
@@ -231,12 +239,7 @@ if (isset($_GET['change'])) {
     header('Location: ucp.php?p=account&m=1');
     break;
     
-    case 'tweet':
-    if (!isset($_SESSION['logged_in']) || !isset($_SESSION['user'])) {
-      header('Location: ucp.php');
-      exit();
-    }
-    
+    case 'tweet':    
     if (!$twitter_on) {
       header('Location: ucp.php?p=front&m=3');
       exit();
@@ -329,6 +332,9 @@ $user_gravatar_email = $res['config_value'];
 $res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_show_user_id\'');
 $res = $res->fetch_assoc();
 $show_user_id = ($res['config_value'] === "true" ? true : false);
+$res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_api_key\'');
+$res = $res->fetch_assoc();
+$api_key = $res['config_value'];
 
 $res = $sql->query('SELECT * FROM `' . $MYSQL_TABLE_PREFIX . 'inbox`');
 $question_count = $res->num_rows;
@@ -521,6 +527,12 @@ switch ($page) {
       case '5':
         $message = "Successfully connected with Twitter.";
         break;
+      case '6':
+        $message = "I have generated a new API key, just for you.";
+        break;
+      case '7':
+        $message = "Something went wrong.";
+        break;
       case '0':
       default:
         $is_message = false;
@@ -600,6 +612,7 @@ $tpl->assign("ucp_menu", $menu);
 $tpl->assign("themes", $themes);
 $tpl->assign("message", $message);
 $tpl->assign("pagenum", $pagenum);
+$tpl->assign("api_key", $api_key);
 $tpl->assign("answers", $responses);
 $tpl->assign("gravatar", $gravatar);
 $tpl->assign("current_page", $page);

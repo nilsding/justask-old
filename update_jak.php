@@ -121,6 +121,26 @@ function upgrade_to(MySQLi $sql, $ver, $MYSQL_TABLE_PREFIX, &$content) {
       }
       $content .= '<br />';
       break;
+    case 7:
+      /* new config values in config r7:
+       * cfg_api_key = the API key other applications may use
+       */
+      $JUSTASK_CONFIG_VERSION = 7;
+      $content .= 'updating version value... ';
+      $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . $JUSTASK_CONFIG_VERSION . '\' WHERE `config_id`=\'version\'; ';
+      $sql->query($sql_str);
+      
+      $api_key = substr(str_shuffle(str_repeat('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',5)),0,12);;
+      $content .= 'done<br />upgrading database... <br />adding new config value... <br />';
+      $sql_str = 'INSERT INTO `' . $MYSQL_TABLE_PREFIX . 'config` (`config_id`, `config_value`) VALUES (\'cfg_api_key\', \'' . $sql->real_escape_string($api_key) . '\');';
+      if (!$sql->query($sql_str)) {
+        $content .= 'error<br />';
+      } else {
+        $content .= 'done<br />';
+        $content .= '<code>Your API Key is <strong>' . $api_key . '</strong></code>';
+      }
+      $content .= '<br />';       
+      break;
     default:
       die("Unknown \$ver given!");
   }
@@ -160,31 +180,47 @@ $config_version = $res['config_value'];
 
 switch ($config_version) {
   case 3:
-    $content .= "<p>upgrading to <strong>r5</strong>...<br />";
+    $content .= "<p>upgrading to <strong>r7</strong>...<br />";
+    $content .= "<strong>r3 → r4</strong><br />";
     upgrade_to($sql, 4, $MYSQL_TABLE_PREFIX, $content);
     $content .= "<strong>r4 → r5</strong><br />";
     upgrade_to($sql, 5, $MYSQL_TABLE_PREFIX, $content);
     $content .= "<strong>r5 → r6</strong><br />";
     upgrade_to($sql, 6, $MYSQL_TABLE_PREFIX, $content);
+    $content .= "<strong>r6 → r7</strong><br />";
+    upgrade_to($sql, 7, $MYSQL_TABLE_PREFIX, $content);
     $content .= "Perfect.</p>";
     break;
   case 4:
-    $content .= "<p>upgrading to <strong>r5</strong>...<br />";
+    $content .= "<p>upgrading to <strong>r7</strong>...<br />";
+    $content .= "<strong>r4 → r5</strong><br />";
     upgrade_to($sql, 5, $MYSQL_TABLE_PREFIX, $content);
     $content .= "<strong>r5 → r6</strong><br />";
     upgrade_to($sql, 6, $MYSQL_TABLE_PREFIX, $content);
+    $content .= "<strong>r6 → r7</strong><br />";
+    upgrade_to($sql, 7, $MYSQL_TABLE_PREFIX, $content);
     $content .= "Perfect.</p>";
     break;
   case 5:
-    $content .= "<p>upgrading to <strong>r6</strong>...<br />";
+    $content .= "<p>upgrading to <strong>r7</strong>...<br />";
+    $content .= "<strong>r5 → r6</strong><br />";
     upgrade_to($sql, 6, $MYSQL_TABLE_PREFIX, $content);
+    $content .= "<strong>r6 → r7</strong><br />";
+    upgrade_to($sql, 7, $MYSQL_TABLE_PREFIX, $content);
     $content .= "Perfect.</p>";
     break;
   case 6:
+    $content .= "<p>upgrading to <strong>r7</strong>...<br />";
+    $content .= "<strong>r6 → r7</strong><br />";
+    upgrade_to($sql, 7, $MYSQL_TABLE_PREFIX, $content);
+    $content .= "Perfect.</p>";
+    break;
+  case 7:
     $content .= "<p>Your config is already up to date.</p>";
     break;
   default:
-    $content .= "<p>upgrading to <strong>r6</strong>...<br />";
+    $content .= "<p>upgrading to <strong>r7</strong>...<br />";
+    $content .= "<strong>r? → r4</strong><br />";
     upgrade_to($sql, 3, $MYSQL_TABLE_PREFIX, $content);
     $content .= "<strong>r3 → r4</strong><br />";
     upgrade_to($sql, 4, $MYSQL_TABLE_PREFIX, $content);
@@ -192,6 +228,8 @@ switch ($config_version) {
     upgrade_to($sql, 5, $MYSQL_TABLE_PREFIX, $content);
     $content .= "<strong>r5 → r6</strong><br />";
     upgrade_to($sql, 6, $MYSQL_TABLE_PREFIX, $content);
+    $content .= "<strong>r6 → r7</strong><br />";
+    upgrade_to($sql, 7, $MYSQL_TABLE_PREFIX, $content);
     $content .= "Perfect.</p>";
 }
 

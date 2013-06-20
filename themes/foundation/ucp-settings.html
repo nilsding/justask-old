@@ -26,6 +26,30 @@
   </div>
 </form>
 
+<h4>API</h4>
+<div class="row">
+  <div class="small-8">
+    <div class="row">
+      <div class="small-4 columns">
+        <label for="api_key" class="right inline">
+          <span data-tooltip class="has-tip" title="Some applications may use this key along with your user name.">API Key</span>
+        </label>
+      </div>
+      <div class="small-8 columns">
+        <input type="text" id="api_key" readonly="readonly" name="api_key" value="{$api_key}">
+      </div>
+    </div>
+  </div>
+</div>
+<form class="custom" method="POST" action="ucp.php?change=generate_api_key">
+  <div class="row">
+    <div class="small-12 columns">
+      <button class="small secondary button">Generate</button>
+    </div>
+  </div>
+</form>
+Developers may want to read the <a href="https://github.com/nilsding/justask/wiki/API-documentation">API Documentation</a> (work in progress).
+
 <h3>justask settings</h3>
 <p>These are settings for justask.</p>
 <form class="custom" method="POST" action="ucp.php?change=justask">
