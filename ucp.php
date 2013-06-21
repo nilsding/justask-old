@@ -374,7 +374,13 @@ if (!isset($_GET['p'])) {
   $page = $_GET['p'];
 }
 
-$url = "http" . ($_SERVER["HTTPS"] == "on" ? 's' : '') . "://" . $_SERVER['HTTP_HOST'];
+$url = "http";
+if (isset($_SERVER["HTTPS"])) {
+  if ($_SERVER["HTTPS"] == "on") {
+    $url .= 's';
+  }
+}
+$url .= "://" . $_SERVER['HTTP_HOST'];
 
 $last_page = 1;
 $add_params = "";
