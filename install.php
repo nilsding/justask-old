@@ -24,10 +24,6 @@ if (isset($_GET['p'])) {
 <h1>justask Installer</h1>
 <?php switch($page) { 
 case "start":
-
-if (file_exists('config.php')) {
-  header('Location: install.php?p=config_already_exists');
-}
 ?>
 <form action="install.php">
 <h2>Welcome to the justask installer!</h2>
@@ -214,6 +210,9 @@ case "finish_2": ?>
 </form>
   <?php
 } else {
+if (file_exists('config.php')) {
+  $page = 'config_already_exists';
+}
   include_once 'config.php';
   ?>
   <p>I will now test the database connection.</p>
@@ -318,6 +317,11 @@ case "finish_2": ?>
       }
     } 
   }
+  
+  $api_key = substr(str_shuffle(str_repeat('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',5)),0,12);;
+  $content .= 'done<br />upgrading database... <br />adding new config value... <br />';
+  $sql_str = 'INSERT INTO `' . $MYSQL_TABLE_PREFIX . 'config` (`config_id`, `config_value`) VALUES (\'cfg_api_key\', \'' . $sql->real_escape_string($api_key) . '\');';
+  $sql->query($sql_str);
   
   echo "<p>Creating default user [username: &quot;user&quot;, password: &quot;password&quot;]...</p>";
   
