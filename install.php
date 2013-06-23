@@ -4,14 +4,13 @@
  * © 2013 nilsding
  * License: AGPLv3, read the LICENSE file for the license text.
  */
+ 
+ //TODO: rewrite install script. it sucks D
 session_start();
 if (isset($_GET['p'])) {
   $page = $_GET['p'];
 } else {
   $page = "start";
-}
-if (file_exists('config.php')) {
-  $page = 'config_already_exists';
 }
 ?>
 <!DOCTYPE html>
@@ -25,6 +24,10 @@ if (file_exists('config.php')) {
 <h1>justask Installer</h1>
 <?php switch($page) { 
 case "start":
+
+if (file_exists('config.php')) {
+  header('Location: install.php?p=config_already_exists');
+}
 ?>
 <form action="install.php">
 <h2>Welcome to the justask installer!</h2>
@@ -222,7 +225,8 @@ case "finish_2": ?>
     echo "<p>Oh and please ignore the following errors, if any. Thanks! :3</p>";
   }
   
-  $JUSTASK_CONFIG_VERSION = 5;
+  //TODO: change this ALWAYS to the latest version. and don't forget to change the other code.
+  $JUSTASK_CONFIG_VERSION = 7;
   
   /* default twitter consumer keys */
   $JUSTASK_TWITTER_CK = "ABr5S6jAB4RQYFYWm5Sq";
