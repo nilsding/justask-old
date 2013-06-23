@@ -122,7 +122,7 @@ if (!isset($_GET['jak_entriesperpage'])) {
 <td><input type="text" name="mysql_pass" value="password"></td>
 </tr>
 <tr>
-<td><label for="mysql_database">Server:</label></td>
+<td><label for="mysql_database">Database name:</label></td>
 <td><input type="text" name="mysql_database" value="database"></td>
 </tr>
 <tr>
