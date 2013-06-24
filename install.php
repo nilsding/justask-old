@@ -222,8 +222,9 @@ case "finish_2": ?>
     echo "<p>Please check your MySQL user/pass/server/whatever.</p>";
     echo "<p>Oh and please ignore the following errors, if any. Thanks! :3</p>";
   }
-  
-  $JUSTASK_CONFIG_VERSION = 5;
+
+  //TODO: change this ALWAYS to the latest version. and don't forget to change the other code.
+  $JUSTASK_CONFIG_VERSION = 8;
   
   /* default twitter consumer keys */
 
