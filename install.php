@@ -11,9 +11,6 @@ if (isset($_GET['p'])) {
 } else {
   $page = "start";
 }
-//if (file_exists('config.php')) {
-//  $page = 'config_already_exists';
-//}
 ?>
 <!DOCTYPE html>
 <html>
