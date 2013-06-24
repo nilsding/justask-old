@@ -58,6 +58,7 @@ function generate_tweet_text(MySQLi $sql, $MYSQL_TABLE_PREFIX) {
   }
   $url = substr($url, 0, (strlen($url) - strlen($_SERVER['SCRIPT_NAME'])));
   $url .= fixDir();
+  if(fixDir()=="") $url .= "/";
   $url .= "view_answer.php?id=" . $answer_id;
   if (strlen($question_content) > 56) {
     $question_content = substr($question_content, 0, 55) . '…'; 
