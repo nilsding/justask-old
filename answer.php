@@ -4,6 +4,9 @@
  * © 2013 nilsding
  * License: AGPLv3, read the LICENSE file for the license text.
  */
+
+include_once('fixDir.php');
+
 session_start();
 
 if (file_exists('config.php')) {
@@ -53,7 +56,9 @@ function generate_tweet_text(MySQLi $sql, $MYSQL_TABLE_PREFIX) {
   } else {
     $url .= $_SERVER["SERVER_NAME"].$_SERVER["REQUEST_URI"];
   }
-  $url = substr($url, 0, (strlen($url) - strlen($_SERVER['SCRIPT_NAME'])));
+#  $url = substr($url, 0, (strlen($url) - strlen($_SERVER['SCRIPT_NAME'])));
+  $url = $_SERVER["SERVER_NAME"];
+  $url .= fixDir();
   $url .= "/view_answer.php?id=" . $answer_id;
   if (strlen($question_content) > 56) {
     $question_content = substr($question_content, 0, 55) . '…'; 
