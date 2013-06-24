@@ -231,7 +231,7 @@ case "finish_2": ?>
 
   $JUSTASK_TWITTER_CK = "ABr5S6jAB4RQYFYWm5Sq";
   $JUSTASK_TWITTER_CS = "ICM7eKAlu6PSPysQr7Sim0uFT4HoqK7d5asEpW1Qd6";
-  $JUSTASK_TWITTER_CALLBACK = "http://" . $_SERVER['HTTP_HOST'] . fixDir() . "callback.php";
+  $JUSTASK_TWITTER_CALLBACK = "http://" . $_SERVER['HTTP_HOST'] . fixDir() . "/callback.php";
   
   echo "<p>Creating config table...</p>";
   

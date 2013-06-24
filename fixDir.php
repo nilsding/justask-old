@@ -5,8 +5,10 @@
       $arSc=explode("/", $scrpt);
       $scNumb=count($arSc);
       for($i=0; $i<$scNumb-1; $i++){
-        $newDir.=$arSc[$i] . "/";
+        $newDir.=$arSc[$i];
+	if($i!=($scNumb-1)) $newDir.="/";
       }
+
       return $newDir;
     }
     return "";
