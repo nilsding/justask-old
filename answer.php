@@ -56,7 +56,8 @@ function generate_tweet_text(MySQLi $sql, $MYSQL_TABLE_PREFIX) {
   } else {
     $url .= $_SERVER["SERVER_NAME"].$_SERVER["REQUEST_URI"];
   }
-  $url = substr($url, 0, (strlen($url) - strlen($_SERVER['SCRIPT_NAME'])));
+#  $url = substr($url, 0, (strlen($url) - strlen($_SERVER['SCRIPT_NAME'])));
+  $url = $_SERVER["SERVER_NAME"];
   $url .= fixDir();
   if(fixDir()=="") $url .= "/";
   $url .= "view_answer.php?id=" . $answer_id;
