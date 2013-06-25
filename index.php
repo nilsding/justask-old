@@ -152,7 +152,6 @@ raintpl::configure("path_replace", false);
 raintpl::configure("tpl_dir", "themes/$current_theme/");
 
 $tpl = new RainTPL;
-
 $tpl->assign("pages", $pages);
 $tpl->assign("pagenum", $pagenum);
 $tpl->assign("gravatar", $gravatar);

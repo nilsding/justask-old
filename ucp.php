@@ -13,6 +13,7 @@ if (file_exists('config.php')) {
   exit();
 }
 
+include_once 'fixDir.php';
 include_once 'gravatar.php';
 
 $shouldchangepassanduser = false;
@@ -380,7 +381,7 @@ if (isset($_SERVER["HTTPS"])) {
     $url .= 's';
   }
 }
-$url .= "://" . $_SERVER['HTTP_HOST'];
+$url .= "://" . $_SERVER['HTTP_HOST'] . fixDir();
 
 $last_page = 1;
 $add_params = "";
