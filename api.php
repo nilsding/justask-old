@@ -4,7 +4,7 @@
  * © 2013 nilsding
  * License: AGPLv3, read the LICENSE file for the license text.
  */
-$response = array('success' => false, 'code' => 0, 'message' => '', 'data' => null);
+$response = array('success' => false, 'code' => 0, 'message' => '', 'action' => '', 'data' => null);
 
 if (file_exists('config.php')) {
   require_once('config.php');
@@ -42,6 +42,7 @@ if (!isset($_REQUEST['action'])) {
   echo json_encode($response);
   exit();
 }
+$response['action'] = $_REQUEST['action'];
 
 $sql = mysqli_connect($MYSQL_SERVER, $MYSQL_USER, $MYSQL_PASS, $MYSQL_DATABASE);
 $res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_username\'');
