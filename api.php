@@ -181,6 +181,7 @@ switch(trim(strtolower($_REQUEST['action']))) {
     }
     
     $response['code'] = 200;
+    $response['data'] = $question_id;
     $response['message'] = 'Successfully deleted question.';
     $response['success'] = true;
     
