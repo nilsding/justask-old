@@ -155,6 +155,36 @@ switch(trim(strtolower($_REQUEST['action']))) {
     $response['message'] = 'OK';
       
     break;
+  case 'delete_question':
+    if (!isset($_REQUEST['question_id'])) {
+      $response['code'] = 407;
+      $response['message'] = 'Parameter `question_id` is missing.';
+      echo json_encode($response);
+      exit();
+    }
+    
+    $question_id = $_REQUEST['question_id'];
+    
+    if (!is_numeric($question_id)) {
+      $response['code'] = 408;
+      $response['message'] = '`question_id` is not numeric.';
+      echo json_encode($response);
+      exit();
+    }
+    
+    $sql_str = 'DELETE FROM `' . $MYSQL_TABLE_PREFIX . 'inbox` WHERE `question_id`=' . $question_id;
+    if (!$sql->query($sql_str)) {
+      $response['code'] = 500;
+      $response['message'] = 'Error while deleting question';
+      echo json_encode($response);
+      exit();
+    }
+    
+    $response['code'] = 200;
+    $response['message'] = 'Successfully deleted question.';
+    $response['success'] = true;
+    
+    break;
   case 'get_answers':
     $answers = array();
     $res = $sql->query('SELECT * FROM `' . $MYSQL_TABLE_PREFIX . 'answers` ORDER BY `answer_timestamp` DESC');
