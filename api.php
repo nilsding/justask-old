@@ -219,7 +219,7 @@ switch(trim(strtolower($_REQUEST['action']))) {
     }
     
     $response['code'] = 200;
-    $response['data'] = $inbox;
+    $response['data'] = $answers;
     $response['success'] = true;
     $response['message'] = 'OK';
     
