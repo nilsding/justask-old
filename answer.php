@@ -98,7 +98,7 @@ switch ($action) {
       header('Location: ucp.php?p=inbox&m=4');
       exit();
     }
-    header('Location: ucp.php?p=inbox&hm=1');
+    header('Location: ucp.php?p=inbox&m=1');
     break;
   case 'delete_answer':
     $sql_str = 'DELETE FROM `' . $MYSQL_TABLE_PREFIX . 'answers` WHERE `answer_id`=' . $question_id;
