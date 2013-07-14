@@ -4,7 +4,10 @@
  * © 2013 nilsding
  * License: AGPLv3, read the LICENSE file for the license text.
  */
-$response = array('success' => false, 'code' => 0, 'message' => '', 'action' => '', 'data' => null);
+ 
+$API_VERSION = 1;
+ 
+$response = array('version' => $API_VERSION, 'success' => false, 'code' => 0, 'message' => '', 'action' => '', 'data' => null);
 
 if (file_exists('config.php')) {
   require_once('config.php');
@@ -16,6 +19,7 @@ if (file_exists('config.php')) {
 }
 
 require_once 'gravatar.php';
+require_once 'generic_functions.php';
 
 /* important variables (can be sent through a GET or POST request, whatever you like best)
  * user_name = username
@@ -121,6 +125,15 @@ switch(trim(strtolower($_REQUEST['action']))) {
     break;
   case 'get_inbox':
     $res = $sql->query('SELECT * FROM `' . $MYSQL_TABLE_PREFIX . 'inbox` ORDER BY `question_timestamp` DESC');
+    
+    if ($res->num_rows == 0) {
+      $response['code'] = 201;
+      $response['success'] = true;
+      $response['message'] = 'Your inbox is empty';
+      echo json_encode($response);
+      exit();
+    }
+    
     if (!$get_all_pages) {
       $last_page = ceil($res->num_rows / $max_entries_per_page); 
       if ($pagenum > $last_page) {
@@ -187,8 +200,18 @@ switch(trim(strtolower($_REQUEST['action']))) {
     
     break;
   case 'get_answers':
-    $answers = array();
     $res = $sql->query('SELECT * FROM `' . $MYSQL_TABLE_PREFIX . 'answers` ORDER BY `answer_timestamp` DESC');
+    
+    if ($res->num_rows == 0) {
+      $response['code'] = 201;
+      $response['success'] = true;
+      $response['message'] = 'You haven\'t answered any questions yet!';
+      echo json_encode($response);
+      exit();
+    }
+    
+    $answers = array();
+    
     if (!$get_all_pages) {
       $last_page = ceil($res->num_rows / $max_entries_per_page); 
       if ($pagenum > $last_page) {
@@ -222,6 +245,27 @@ switch(trim(strtolower($_REQUEST['action']))) {
     $response['data'] = $answers;
     $response['success'] = true;
     $response['message'] = 'OK';
+    
+    break;
+  case 'answer_question':
+    if (!isset($_REQUEST['question_id'])) {
+      $response['code'] = 407;
+      $response['message'] = 'Parameter `question_id` is missing.';
+      echo json_encode($response);
+      exit();
+    }
+    
+    $question_id = $_REQUEST['question_id'];
+    
+    if (!is_numeric($question_id)) {
+      $response['code'] = 408;
+      $response['message'] = '`question_id` is not numeric.';
+      echo json_encode($response);
+      exit();
+    }
+    
+    $response['code'] = 666;
+    $response['message'] = 'todo: `answer_question`';
     
     break;
   default:

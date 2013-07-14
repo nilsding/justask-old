@@ -6,6 +6,7 @@
  */
 
 include_once('fixDir.php');
+require_once 'generic_functions.php';
 
 session_start();
 
@@ -37,36 +38,6 @@ $question_id = $_POST['question_id'];
 if (!is_numeric($question_id)) {
   echo "?SYNTAX ERROR";
   exit();
-}
-
-function generate_tweet_text(MySQLi $sql, $MYSQL_TABLE_PREFIX) {
-  $sql_str = "SELECT * FROM `" . $MYSQL_TABLE_PREFIX . "answers` ORDER BY `answer_id` DESC LIMIT 1"; /* we need the latest answer here... */
-  $res = $sql->query($sql_str);
-  $res = $res->fetch_assoc();
-  $answer_id = $res['answer_id'];
-  $question_content = $res['question_content'];
-  $answer = $res['answer_text'];
-  $url = 'http';
-  if ($_SERVER["HTTPS"] == "on") {
-    $url .= "s";
-  }
-  $url .= "://";
-  if ($_SERVER["SERVER_PORT"] != "80") {
-    $url .= $_SERVER["SERVER_NAME"].":".$_SERVER["SERVER_PORT"].$_SERVER["REQUEST_URI"];
-  } else {
-    $url .= $_SERVER["SERVER_NAME"].$_SERVER["REQUEST_URI"];
-  }
-#  $url = substr($url, 0, (strlen($url) - strlen($_SERVER['SCRIPT_NAME'])));
-  $url = $_SERVER["SERVER_NAME"];
-  $url .= fixDir();
-  $url .= "/view_answer.php?id=" . $answer_id;
-  if (strlen($question_content) > 56) {
-    $question_content = substr($question_content, 0, 55) . '…'; 
-  }
-  if (strlen($answer) > 56) {
-    $answer = substr($answer, 0, 55) . '…'; 
-  }
-  return $question_content . " — " . $answer . ' · ' . $url;
 }
 
 $sql = mysqli_connect($MYSQL_SERVER, $MYSQL_USER, $MYSQL_PASS, $MYSQL_DATABASE);
@@ -111,9 +82,11 @@ switch ($action) {
   case 'answer':
     if (!isset($_POST['answer'])) {
       header('Location: ucp.php?p=inbox&m=3');
+      exit();
     }
-    if ($_POST['answer'] === '') {
+    if (strlen(trim($_POST['answer'])) == 0) {
       header('Location: ucp.php?p=inbox&m=3');
+      exit();
     }
     
     $answer = $sql->real_escape_string($_POST['answer']);
@@ -137,6 +110,7 @@ switch ($action) {
       header('Location: ucp.php?p=inbox&m=4');
       exit();
     }
+    $answer_id = $sql->insert_id;
     
     $sql_str = 'DELETE FROM `' . $MYSQL_TABLE_PREFIX . 'inbox` WHERE `question_id`=' . $question_id;
     $sql->query($sql_str);
@@ -144,7 +118,7 @@ switch ($action) {
     if ($twitter_on) {
       if (isset($_POST['post_to_twitter'])) {
         $connection = new TwitterOAuth($twitter_ck, $twitter_cs, $twitter_at, $twitter_ats);
-        $status = generate_tweet_text($sql, $MYSQL_TABLE_PREFIX);
+        $status = generate_tweet_text($sql, $MYSQL_TABLE_PREFIX, $answer_id);
         $connection->post('statuses/update', array('status' => $status));
       }
     }
