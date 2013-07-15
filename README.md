@@ -33,7 +33,7 @@ Example:
 	cd /var/ssl/ask.meikodis.org
 	# Symlinks from http to https
 	ln -s /var/www/ask.meikodis.org/* .
-´´´
+```
 
 Then do two .htaccess files. One for http to https:
 ```bash
@@ -42,7 +42,7 @@ Then do two .htaccess files. One for http to https:
 
 	RewriteCond %{REQUEST_URI} ucp.php [NC]
 	RewriteRule .* https://%{SERVER_NAME}%{REQUEST_URI} [L]
-´´´
+```
 
 One for https to http:
 ```bash
@@ -51,4 +51,4 @@ One for https to http:
 
 	RewriteCond %{REQUEST_URI} index.php [NC]
 	RewriteRule .* http://%{SERVER_NAME}%{REQUEST_URI} [L]
-´´´
+```
