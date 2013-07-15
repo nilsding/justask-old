@@ -46,8 +46,9 @@ cat /var/www/ask.meikodis.org/.htaccess
 ```
 
 One for https to http.
+
 cat /var/ssl/ask.meikodis.org/.htaccess
-```bash
+```htaccess
 	RewriteEngine On
 
 	RewriteCond %{REQUEST_URI} index.php [NC]
