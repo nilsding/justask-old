@@ -344,6 +344,7 @@ switch(trim(strtolower($_REQUEST['action']))) {
     $response['code'] = 200;
     $response['success'] = true;
     $response['message'] = 'Question successfully answered.';
+    $response['data'] = $question_id;
     
     break;
   default:
