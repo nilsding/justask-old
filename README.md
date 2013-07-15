@@ -24,7 +24,7 @@ password is "password".
 ## Upgrading
 Upgrading is easy! In most cases, just running the curent `update_jak.php` will work.
 
-## SSL for the User Control Panel (ucp.php)
+## SSL for the User Control Panel (ucp.php) using Apache's .htaccess
 First you need to make a new vhost with ssl. Then do symlinks in to your webserver's ssl directory.
 
 Example:
