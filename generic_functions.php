@@ -5,6 +5,8 @@
  * License: AGPLv3, read the LICENSE file for the license text.
  */
 
+include_once 'fixDir.php';
+ 
 /** This function generates a tweet text in the format "question — answer - url", which is less than 140 characters long.
  * @param $sql MySQLi object
  * @param $MYSQL_TABLE_PREFIX Table prefix.
@@ -21,7 +23,7 @@ function generate_tweet_text(MySQLi $sql, $MYSQL_TABLE_PREFIX, $answer_id) {
   $question_content = $res['question_content'];
   $answer = $res['answer_text'];
   $url = 'http';
-  if ($_SERVER["HTTPS"] == "on") {
+  if (isset($_SERVER["HTTPS"])) { // does it work better that way?
     $url .= "s";
   }
   $url .= "://";

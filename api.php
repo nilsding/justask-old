@@ -63,6 +63,26 @@ if ($_REQUEST['user_name'] !== $user_name || $_REQUEST['api_key'] !== $api_key) 
   exit();
 }
 
+$res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_twitter\'');
+$res = $res->fetch_assoc();
+$twitter_on = ($res['config_value'] === "true" ? true : false);
+
+if ($twitter_on) {
+  include_once 'include/oauth/twitteroauth.php';
+  $res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_twitter_ck\'');
+  $res = $res->fetch_assoc();
+  $twitter_ck = $res['config_value'];
+  $res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_twitter_cs\'');
+  $res = $res->fetch_assoc();
+  $twitter_cs = $res['config_value'];
+  $res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_twitter_at\'');
+  $res = $res->fetch_assoc();
+  $twitter_at = $res['config_value'];
+  $res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_twitter_ats\'');
+  $res = $res->fetch_assoc();
+  $twitter_ats = $res['config_value'];
+}
+
 $get_all_pages = false;
 if (!isset($_REQUEST['page'])) {
   $pagenum = 1;
@@ -95,9 +115,9 @@ switch(trim(strtolower($_REQUEST['action']))) {
     $res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_currtheme\'');
     $res = $res->fetch_assoc();
     $current_theme = $res['config_value'];
-    $res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_twitter\'');
-    $res = $res->fetch_assoc();
-    $twitter_on = ($res['config_value'] === "true" ? true : false);
+//     $res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_twitter\'');
+//     $res = $res->fetch_assoc();
+//     $twitter_on = ($res['config_value'] === "true" ? true : false);
     $res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_gravatar\'');
     $res = $res->fetch_assoc();
     $gravatar = ($res['config_value'] === 'true' ? true : false);
@@ -264,8 +284,66 @@ switch(trim(strtolower($_REQUEST['action']))) {
       exit();
     }
     
-    $response['code'] = 666;
-    $response['message'] = 'todo: `answer_question`';
+    if (!isset($_REQUEST['answer'])) {
+      $response['code'] = 410;
+      $response['message'] = 'Parameter `answer` is missing.';
+      echo json_encode($response);
+      exit();
+    }
+    if (strlen(trim($_REQUEST['answer'])) == 0) {
+      $response['code'] = 410;
+      $response['message'] = 'The answer is empty.';
+      echo json_encode($response);
+      exit();
+    }
+    
+    $answer = $sql->real_escape_string($_REQUEST['answer']);
+    $sql_str = 'SELECT * FROM `' . $MYSQL_TABLE_PREFIX . 'inbox` WHERE `question_id`=' . $question_id;
+    $res = $sql->query($sql_str);
+    
+    if ($res->num_rows == 0) {
+      $response['code'] = 409;
+      $response['message'] = 'The question does not exist on this server anymore???';
+      echo json_encode($response);
+      exit();
+    }
+    
+    $res = $res->fetch_assoc();
+    
+    $question_content = $sql->real_escape_string($res['question_content']);
+    $asker_name = $sql->real_escape_string($res['asker_name']);
+    $asker_gravatar = $sql->real_escape_string($res['asker_gravatar']);
+    $asker_id = $sql->real_escape_string($res['asker_id']);
+    $asker_private = $res['asker_private'];
+    $question_timestamp = $res['question_timestamp'];
+    
+    $sql_str = 'INSERT INTO `' . $MYSQL_TABLE_PREFIX . 'answers` (`question_content`, `asker_name`, ' .
+    '`asker_gravatar`, `asker_private`, `question_timestamp`, `answer_text`, `asker_id`) VALUES (\'' . $question_content . 
+    '\', \'' . $asker_name . '\', \'' . $asker_gravatar . '\', \'' . $asker_private . '\', \'' . $question_timestamp . 
+    '\', \'' . $answer . '\', \'' . $asker_id . '\');';
+    
+    if (!$sql->query($sql_str)) {
+      $response['code'] = 500;
+      $response['message'] = 'Error while answering question';
+      echo json_encode($response);
+      exit();
+    }
+    $answer_id = $sql->insert_id;
+    
+    $sql_str = 'DELETE FROM `' . $MYSQL_TABLE_PREFIX . 'inbox` WHERE `question_id`=' . $question_id;
+    $sql->query($sql_str);
+    
+    if ($twitter_on) {
+      if (isset($_REQUEST['post_to_twitter'])) {
+        $connection = new TwitterOAuth($twitter_ck, $twitter_cs, $twitter_at, $twitter_ats);
+        $status = generate_tweet_text($sql, $MYSQL_TABLE_PREFIX, $answer_id);
+        $connection->post('statuses/update', array('status' => $status));
+      }
+    }
+    
+    $response['code'] = 200;
+    $response['success'] = true;
+    $response['message'] = 'Question successfully answered.';
     
     break;
   default:
