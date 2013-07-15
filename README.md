@@ -37,17 +37,22 @@ Example:
 
 Then do two .htaccess files. One for http to https.
 
-cat /var/www/ask.meikodis.org/.htaccess
 ```bash
+cat /var/www/ask.meikodis.org/.htaccess
+```
+```apache
 	RewriteEngine On
 
 	RewriteCond %{REQUEST_URI} ucp.php [NC]
 	RewriteRule .* https://%{SERVER_NAME}%{REQUEST_URI} [L]
 ```
 
+
 One for https to http.
 
+```bash
 cat /var/ssl/ask.meikodis.org/.htaccess
+```
 ```apache
 	RewriteEngine On
 
