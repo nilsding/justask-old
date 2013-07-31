@@ -5,7 +5,7 @@
  * License: AGPLv3, read the LICENSE file for the license text.
  */
  
-$API_VERSION = 1;
+$API_VERSION = 2;
  
 $response = array('version' => $API_VERSION, 'success' => false, 'code' => 0, 'message' => '', 'action' => '', 'data' => null);
 
@@ -103,6 +103,13 @@ if ($max_entries_per_page < 1) {
   $max_entries_per_page = 10;
 }
 
+$since_id = 0;
+if (isset($_REQUEST['since_id'])) {
+  if (is_numeric($_REQUEST['since_id'])) {
+    $since_id = (int) $_REQUEST['since_id'];
+  }
+}
+
 switch(trim(strtolower($_REQUEST['action']))) {
   case 'info':
     $res = $sql->query('SELECT * FROM `' . $MYSQL_TABLE_PREFIX . 'inbox`');
@@ -144,12 +151,20 @@ switch(trim(strtolower($_REQUEST['action']))) {
     
     break;
   case 'get_inbox':
-    $res = $sql->query('SELECT * FROM `' . $MYSQL_TABLE_PREFIX . 'inbox` ORDER BY `question_timestamp` DESC');
-    
+    $res = $sql->query('SELECT * FROM `' . $MYSQL_TABLE_PREFIX . 'inbox`');
     if ($res->num_rows == 0) {
       $response['code'] = 201;
       $response['success'] = true;
       $response['message'] = 'Your inbox is empty';
+      echo json_encode($response);
+      exit();
+    }
+    
+    $res = $sql->query('SELECT * FROM `' . $MYSQL_TABLE_PREFIX . 'inbox` WHERE (`question_id` > ' . $since_id . ') ORDER BY `question_timestamp` DESC');
+    if ($res->num_rows == 0) {
+      $response['code'] = 202;
+      $response['success'] = true;
+      $response['message'] = 'No new questions.';
       echo json_encode($response);
       exit();
     }
@@ -161,7 +176,7 @@ switch(trim(strtolower($_REQUEST['action']))) {
       }
       $max_sql = ' LIMIT ' . ($pagenum - 1) * $max_entries_per_page . ',' . $max_entries_per_page; 
 
-      $res = $sql->query('SELECT * FROM `' . $MYSQL_TABLE_PREFIX . 'inbox` ORDER BY `question_timestamp` DESC' . $max_sql);
+      $res = $sql->query('SELECT * FROM `' . $MYSQL_TABLE_PREFIX . 'inbox` WHERE (`question_id` > ' . $since_id . ') ORDER BY `question_timestamp` DESC' . $max_sql);
     }
     
     $inbox = array();
@@ -220,12 +235,20 @@ switch(trim(strtolower($_REQUEST['action']))) {
     
     break;
   case 'get_answers':
-    $res = $sql->query('SELECT * FROM `' . $MYSQL_TABLE_PREFIX . 'answers` ORDER BY `answer_timestamp` DESC');
-    
+    $res = $sql->query('SELECT * FROM `' . $MYSQL_TABLE_PREFIX . 'answers`');
     if ($res->num_rows == 0) {
       $response['code'] = 201;
       $response['success'] = true;
       $response['message'] = 'You haven\'t answered any questions yet!';
+      echo json_encode($response);
+      exit();
+    }
+    
+    $res = $sql->query('SELECT * FROM `' . $MYSQL_TABLE_PREFIX . 'answers` WHERE (`answer_id` > ' . $since_id . ') ORDER BY `answer_timestamp` DESC');
+    if ($res->num_rows == 0) {
+      $response['code'] = 202;
+      $response['success'] = true;
+      $response['message'] = 'No new answers.';
       echo json_encode($response);
       exit();
     }
@@ -239,7 +262,7 @@ switch(trim(strtolower($_REQUEST['action']))) {
       }
       $max_sql_str_part_thing = ' LIMIT ' . ($pagenum - 1) * $max_entries_per_page . ',' . $max_entries_per_page; 
 
-      $res = $sql->query('SELECT * FROM `' . $MYSQL_TABLE_PREFIX . 'answers` ORDER BY `answer_timestamp` DESC' . $max_sql_str_part_thing);
+      $res = $sql->query('SELECT * FROM `' . $MYSQL_TABLE_PREFIX . 'answers` WHERE (`answer_id` > ' . $since_id . ') ORDER BY `answer_timestamp` DESC' . $max_sql_str_part_thing);
     }
     
     while ($question = $res->fetch_assoc()) { 
@@ -287,12 +310,14 @@ switch(trim(strtolower($_REQUEST['action']))) {
     if (!isset($_REQUEST['answer'])) {
       $response['code'] = 410;
       $response['message'] = 'Parameter `answer` is missing.';
+      $response['data'] = $question_id;
       echo json_encode($response);
       exit();
     }
     if (strlen(trim($_REQUEST['answer'])) == 0) {
       $response['code'] = 410;
       $response['message'] = 'The answer is empty.';
+      $response['data'] = $question_id;
       echo json_encode($response);
       exit();
     }
