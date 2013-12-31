@@ -23,3 +23,39 @@ password is "password".
 
 ## Upgrading
 Upgrading is easy! In most cases, just running the curent `update_jak.php` will work.
+
+## SSL for the User Control Panel (ucp.php) using Apache's .htaccess
+First you need to make a new vhost with ssl. Then do symlinks in to your webserver's ssl directory.
+
+Example:
+```bash
+	# Directory to https
+	cd /var/ssl/ask.meikodis.org
+	# Symlinks from http to https
+	ln -s /var/www/ask.meikodis.org/* .
+```
+
+Then do two .htaccess files. One for http to https.
+
+```bash
+cat /var/www/ask.meikodis.org/.htaccess
+```
+```apache
+	RewriteEngine On
+
+	RewriteCond %{REQUEST_URI} ucp.php [NC]
+	RewriteRule .* https://%{SERVER_NAME}%{REQUEST_URI} [L]
+```
+
+
+One for https to http.
+
+```bash
+cat /var/ssl/ask.meikodis.org/.htaccess
+```
+```apache
+	RewriteEngine On
+
+	RewriteCond %{REQUEST_URI} index.php [NC]
+	RewriteRule .* http://%{SERVER_NAME}%{REQUEST_URI} [L]
+```

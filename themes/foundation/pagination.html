@@ -1,0 +1,17 @@
+<div class="pagination-centered">
+  <ul class="pagination">
+{if="$pagenum > 1"}
+    <li class="arrow"><a href="{$page_self}?page={$pagenum == 1 ? 1 : $pagenum - 1}{$add_params}">&laquo;</a></li>
+{else}
+    <li class="arrow unavailable">&laquo;</li>
+{/if}
+{loop="pages"}
+    <li{$pagenum == ($counter + 1) ? ' class="current"' : ''}><a href="{$page_self}?page={$counter + 1}{$add_params}">{$counter+1}</a></li>
+{/loop}
+{if="$pagenum < $last_page"}
+    <li class="arrow"><a href="{$page_self}?page={$pagenum == $last_page ? $last_page : $pagenum + 1}{$add_params}">&raquo;</a></li>
+{else}
+    <li class="arrow unavailable">&raquo;</li>
+{/if}
+  </ul>
+</div>

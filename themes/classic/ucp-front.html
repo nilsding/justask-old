@@ -1,3 +1,15 @@
 {if="$is_message"}<p class="message">{$message}</p>{/if}
 <p><b>Welcome to justask, {$user_name}!</b></p>
 <p>So far, you have answered {$answer_count == 0 ? "no" : ($answer_count == 1 ? "one" : $answer_count)} question{$answer_count != 1 ? "s" : ""}!</p>
+
+{if="$twitter_on"}
+<hr />
+<form class="custom" method="POST" action="ucp.php?change=tweet">
+<table>
+<tr>
+<td><input type="text" id="tweet_text" name="tweet_text" value="Ask me anything! · {$url}"></td>
+<td><button>Tweet</button></td>
+</tr>
+</table>
+</form>
+{/if}

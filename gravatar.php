@@ -12,5 +12,5 @@
 function get_gravatar_url($email, $size) {  
   $default_image_url = "http://static.nilsding.org/nopic-48.png";
   
-  return "http://www.gravatar.com/avatar/" . md5(strtolower(trim($email))) . "?d=" . urlencode($default_image_url) . "&s=" . $size;
+  return "https://www.gravatar.com/avatar/" . md5(strtolower(trim($email))) . "?d=" . urlencode($default_image_url) . "&s=" . $size;
 }

@@ -1,0 +1,50 @@
+{if="$question_count == 0"}
+<div data-alert class="alert-box">
+  No new questions.
+  <a href="#" class="close">&times;</a>
+</div>
+{else}
+{if="$is_message"}
+<div data-alert class="alert-box">
+  {$message}
+  <a href="#" class="close">&times;</a>
+</div>
+{/if}
+<!-- Begin questions -->
+{loop="questions"}
+<hr />
+<form class="custom" action="answer.php" method="POST">
+  <input type="hidden" name="question_id" value="{$value.question_id}">
+  <div class="row">
+    <div class="large-2 columns small-2"><img class="max-48px" src="{$value.asker_gravatar}" /></div>
+    <div class="large-10 columns">
+      <p><strong>{$value.question_asked_by}{if="$show_id"}</strong> (ID: {$value.asker_id})<strong>{/if} asked:</strong><br />{$value.question_content}</p>
+      <ul class="inline-list">
+        <li style="color: #6f6f6f;">{$value.question_time_asked}</li>
+      </ul>
+    </div>
+  </div>
+  <div class="row">
+    <div class="small-12 columns">
+      <textarea id="answer" name="answer" placeholder="Answer this question…"></textarea>
+    </div>
+  </div>
+  <div class="row">
+    <div class="small-6 columns">
+      <button name="action" value="answer" class="small success button">Answer</button>
+      <button name="action" value="delete" class="small alert button">Delete</button>
+    </div>
+    <div class="small-6 columns">
+{if="$twitter_on"}
+      <label for="post_to_twitter" class="inline right">
+        <input type="checkbox" id="post_to_twitter" name="post_to_twitter" style="display: none;"{$twitter_check ? ' checked' : ''}>
+        <span class="custom checkbox"></span> Post to Twitter
+      </label>
+{/if}
+    </div>
+  </div>
+</form>
+{/loop}
+<!-- End questions -->
+{include="pagination"}
+{/if}

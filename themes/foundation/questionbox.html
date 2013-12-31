@@ -1,0 +1,34 @@
+<form class="custom" method="POST" action="ask.php">
+{if="$show_id"}
+  <input type="hidden" name="asker_id" value="{$u_id}" />
+{/if}
+  <div class="row">
+    <div class="large-12 columns">
+      <textarea id="question" name="question" placeholder="Ask me something…"></textarea>
+      <div class="row">
+        <div class="small-7 columns">
+          <input type="text" id="asker_name" name="asker_name" placeholder="Your name">
+        </div>
+        <div class="small-3 columns"></div>
+        <div class="small-2 columns">
+          <button class="small button">Ask!</button>
+        </div>
+      </div>
+      <div class="row">
+        <div class="small-7 columns">
+{if="$gravatar"}
+          <input type="text" id="gravatar_address" name="gravatar_address" placeholder="Gravatar (optional)">
+{/if}
+        </div>
+        <div class="small-5 columns">
+{if="$anon_questions"}
+          <label for="anonymous" class="inline">
+            <input type="checkbox" id="anonymous" name="anonymous" style="display: none;">
+            <span class="custom checkbox"></span> Ask anonymously
+          </label>
+{/if}
+        </div>
+      </div>
+    </div>
+  </div>
+</form>

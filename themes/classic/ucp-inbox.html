@@ -9,7 +9,7 @@
 <img class="asker-gravatar" src="{$value.asker_gravatar}" alt="{$value.question_asked_by}"/>
 <div class="question-text">
 <div class="question-timestamp">{$value.question_time_asked}</div>
-<div class="question-user-asked">{$value.question_asked_by} asked:</div>
+<div class="question-user-asked">{$value.question_asked_by}{if="$show_id"}</strong> (ID: {$value.asker_id})<strong>{/if} asked:</div>
 <div class="question-content">{$value.question_content}</div>
 </div>
 <div class="question-answer-area">
@@ -18,7 +18,7 @@
 </div>
 <div class="question-actions">
 <button class="nature" name="action" value="answer">Answer question</button><button class="danger" name="action" value="delete">Delete question</button>
-<span class="question-actions-right">{if="$twitter_on"}<input type="checkbox" name="post_to_twitter"> Post to Twitter{/if}</span>
+<span class="question-actions-right">{if="$twitter_on"}<input type="checkbox" name="post_to_twitter"{$twitter_check ? ' checked' : ''}> Post to Twitter{/if}</span>
 </div>
 </div>
 <input type="hidden" name="question_id" value="{$value.question_id}">

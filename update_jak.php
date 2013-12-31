@@ -6,7 +6,9 @@ if (file_exists('config.php')) {
   exit();
 }
 
-function upgrade_to(MySQLi $sql, $ver, $MYSQL_TABLE_PREFIX) {
+session_start();
+
+function upgrade_to(MySQLi $sql, $ver, $MYSQL_TABLE_PREFIX, &$content) {
   switch ($ver) {
     case 3:
       /* new config values in config r3:
@@ -24,7 +26,7 @@ function upgrade_to(MySQLi $sql, $ver, $MYSQL_TABLE_PREFIX) {
       $JUSTASK_TWITTER_CS = "ICM7eKAlu6PSPysQr7Sim0uFT4HoqK7d5asEpW1Qd6";
       $JUSTASK_TWITTER_CALLBACK = "http://" . $_SERVER['HTTP_HOST'] . "/callback.php";
       
-      echo 'storing version value... ';
+      $content .= 'storing version value... ';
       $sql_str = 'INSERT INTO `' . $MYSQL_TABLE_PREFIX . 'config` (`config_id`, `config_value`) VALUES (\'version\', \'' . $JUSTASK_CONFIG_VERSION . '\');';
       if (!$sql->query($sql_str)) {
         if ($sql->errno == 1062) { 
@@ -33,34 +35,111 @@ function upgrade_to(MySQLi $sql, $ver, $MYSQL_TABLE_PREFIX) {
         }
       }
       
-      echo 'done<br />upgrading database... ';
+      $content .= 'done<br />upgrading database... ';
       $sql_str = 'INSERT INTO `' . $MYSQL_TABLE_PREFIX . 'config` (`config_id`, `config_value`) VALUES (\'cfg_twitter\', \'false\'), (\'cfg_twitter_ck\', \'' . 
         strrev($JUSTASK_TWITTER_CK) . '\'), (\'cfg_twitter_cs\', \'' . strrev($JUSTASK_TWITTER_CS) . '\'), (\'cfg_twitter_at\', \'\'), (\'cfg_twitter_ats\', \'' .
         '\'), (\'cfg_twitter_callbk\', \'' . $sql->real_escape_string($JUSTASK_TWITTER_CALLBACK) . '\');';
       if (!$sql->query($sql_str)) {
-        echo 'error<br />';
+        $content .= 'error<br />';
       } else {
-        echo 'done<br />';
+        $content .= 'done<br />';
       }
-      echo '<br />';
+      $content .= '<br />';
       break;
     case 4:
       /* new config values in config r4:
        * cfg_currtheme = current theme 
        */
       $JUSTASK_CONFIG_VERSION = 4;
-      echo 'updating version value... ';
+      $content .= 'updating version value... ';
       $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . $JUSTASK_CONFIG_VERSION . '\' WHERE `config_id`=\'version\'; ';
       $sql->query($sql_str);
       
-      echo 'done<br />upgrading database... ';
+      $content .= 'done<br />upgrading database... ';
       $sql_str = 'INSERT INTO `' . $MYSQL_TABLE_PREFIX . 'config` (`config_id`, `config_value`) VALUES (\'cfg_currtheme\', \'' . $sql->real_escape_string("classic") . '\');';
       if (!$sql->query($sql_str)) {
-        echo 'error<br />';
+        $content .= 'error<br />';
       } else {
-        echo 'done<br />';
+        $content .= 'done<br />';
       }
-      echo '<br />';
+      $content .= '<br />';
+      break;
+    case 5:
+      /* new config values in config r5:
+       * cfg_twitter_chk = is the checkbox "Post to twitter" on by default?
+       */
+      $JUSTASK_CONFIG_VERSION = 5;
+      $content .= 'updating version value... ';
+      $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . $JUSTASK_CONFIG_VERSION . '\' WHERE `config_id`=\'version\'; ';
+      $sql->query($sql_str);
+      
+      $content .= 'done<br />upgrading database... ';
+      $sql_str = 'INSERT INTO `' . $MYSQL_TABLE_PREFIX . 'config` (`config_id`, `config_value`) VALUES (\'cfg_twitter_chk\', \'' . $sql->real_escape_string("true") . '\');';
+      if (!$sql->query($sql_str)) {
+        $content .= 'error<br />';
+      } else {
+        $content .= 'done<br />';
+      }
+      $content .= '<br />';
+      break;
+    case 6:
+      /* new values in r6:
+       * _inbox and _answers become a new `asker_id` column
+       * 
+       * cfg_show_user_id = show (generated) user id in inbox and answers
+       */
+       
+      $JUSTASK_CONFIG_VERSION = 6;
+      $content .= 'updating version value... ';
+      $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . $JUSTASK_CONFIG_VERSION . '\' WHERE `config_id`=\'version\'; ';
+      $sql->query($sql_str);
+      
+      $content .= 'done<br />upgrading database... <br />';
+      
+      $content .= 'modifying ' . $MYSQL_TABLE_PREFIX . 'inbox... ';
+      $sql_str = 'ALTER TABLE `' . $MYSQL_TABLE_PREFIX . 'inbox` ADD `asker_id` TEXT NOT NULL;';
+      if (!$sql->query($sql_str)) {
+        $content .= 'error<br />';
+      } else {
+        $content .= 'done<br />';
+      }
+      
+      $content .= 'modifying ' . $MYSQL_TABLE_PREFIX . 'answers... ';
+      $sql_str = 'ALTER TABLE `' . $MYSQL_TABLE_PREFIX . 'answers` ADD `asker_id` TEXT NOT NULL;';
+      if (!$sql->query($sql_str)) {
+        $content .= 'error<br />';
+      } else {
+        $content .= 'done<br />';
+      }
+      
+      $content .= 'adding new config value... ';
+      $sql_str = 'INSERT INTO `' . $MYSQL_TABLE_PREFIX . 'config` (`config_id`, `config_value`) VALUES (\'cfg_show_user_id\', \'' . $sql->real_escape_string("true") . '\');';
+      if (!$sql->query($sql_str)) {
+        $content .= 'error<br />';
+      } else {
+        $content .= 'done<br />';
+      }
+      $content .= '<br />';
+      break;
+    case 7:
+      /* new config values in config r7:
+       * cfg_api_key = the API key other applications may use
+       */
+      $JUSTASK_CONFIG_VERSION = 7;
+      $content .= 'updating version value... ';
+      $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . $JUSTASK_CONFIG_VERSION . '\' WHERE `config_id`=\'version\'; ';
+      $sql->query($sql_str);
+      
+      $api_key = substr(str_shuffle(str_repeat('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',5)),0,12);;
+      $content .= 'done<br />upgrading database... <br />adding new config value... <br />';
+      $sql_str = 'INSERT INTO `' . $MYSQL_TABLE_PREFIX . 'config` (`config_id`, `config_value`) VALUES (\'cfg_api_key\', \'' . $sql->real_escape_string($api_key) . '\');';
+      if (!$sql->query($sql_str)) {
+        $content .= 'error<br />';
+      } else {
+        $content .= 'done<br />';
+        $content .= '<code>Your API Key is <strong>' . $api_key . '</strong></code>';
+      }
+      $content .= '<br />';       
       break;
     default:
       die("Unknown \$ver given!");
@@ -93,25 +172,64 @@ $user_name = $res['config_value'];
 $res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_user_gravatar\'');
 $res = $res->fetch_assoc();
 $user_gravatar_email = $res['config_value'];
-
+$res = $sql->query('SELECT * FROM `' . $MYSQL_TABLE_PREFIX . 'inbox`');
+$question_count = $res->num_rows;
 $res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'version\'');
 $res = $res->fetch_assoc();
 $config_version = $res['config_value'];
 
 switch ($config_version) {
   case 3:
-    $content .= "<p>upgrading to <strong>r4</strong>...<br />";
-    upgrade_to($sql, 4, $MYSQL_TABLE_PREFIX);
+    $content .= "<p>upgrading to <strong>r7</strong>...<br />";
+    $content .= "<strong>r3 → r4</strong><br />";
+    upgrade_to($sql, 4, $MYSQL_TABLE_PREFIX, $content);
+    $content .= "<strong>r4 → r5</strong><br />";
+    upgrade_to($sql, 5, $MYSQL_TABLE_PREFIX, $content);
+    $content .= "<strong>r5 → r6</strong><br />";
+    upgrade_to($sql, 6, $MYSQL_TABLE_PREFIX, $content);
+    $content .= "<strong>r6 → r7</strong><br />";
+    upgrade_to($sql, 7, $MYSQL_TABLE_PREFIX, $content);
     $content .= "Perfect.</p>";
     break;
   case 4:
+    $content .= "<p>upgrading to <strong>r7</strong>...<br />";
+    $content .= "<strong>r4 → r5</strong><br />";
+    upgrade_to($sql, 5, $MYSQL_TABLE_PREFIX, $content);
+    $content .= "<strong>r5 → r6</strong><br />";
+    upgrade_to($sql, 6, $MYSQL_TABLE_PREFIX, $content);
+    $content .= "<strong>r6 → r7</strong><br />";
+    upgrade_to($sql, 7, $MYSQL_TABLE_PREFIX, $content);
+    $content .= "Perfect.</p>";
+    break;
+  case 5:
+    $content .= "<p>upgrading to <strong>r7</strong>...<br />";
+    $content .= "<strong>r5 → r6</strong><br />";
+    upgrade_to($sql, 6, $MYSQL_TABLE_PREFIX, $content);
+    $content .= "<strong>r6 → r7</strong><br />";
+    upgrade_to($sql, 7, $MYSQL_TABLE_PREFIX, $content);
+    $content .= "Perfect.</p>";
+    break;
+  case 6:
+    $content .= "<p>upgrading to <strong>r7</strong>...<br />";
+    $content .= "<strong>r6 → r7</strong><br />";
+    upgrade_to($sql, 7, $MYSQL_TABLE_PREFIX, $content);
+    $content .= "Perfect.</p>";
+    break;
+  case 7:
     $content .= "<p>Your config is already up to date.</p>";
     break;
   default:
-    $content .= "<p>upgrading to <strong>r4</strong>...<br />";
-    upgrade_to($sql, 3, $MYSQL_TABLE_PREFIX);
-    $content .= "<strong>r3 → r4</strong><br /><br />";
-    upgrade_to($sql, 4, $MYSQL_TABLE_PREFIX);
+    $content .= "<p>upgrading to <strong>r7</strong>...<br />";
+    $content .= "<strong>r? → r4</strong><br />";
+    upgrade_to($sql, 3, $MYSQL_TABLE_PREFIX, $content);
+    $content .= "<strong>r3 → r4</strong><br />";
+    upgrade_to($sql, 4, $MYSQL_TABLE_PREFIX, $content);
+    $content .= "<strong>r4 → r5</strong><br /><br />";
+    upgrade_to($sql, 5, $MYSQL_TABLE_PREFIX, $content);
+    $content .= "<strong>r5 → r6</strong><br />";
+    upgrade_to($sql, 6, $MYSQL_TABLE_PREFIX, $content);
+    $content .= "<strong>r6 → r7</strong><br />";
+    upgrade_to($sql, 7, $MYSQL_TABLE_PREFIX, $content);
     $content .= "Perfect.</p>";
 }
 
@@ -136,6 +254,7 @@ $tpl->assign("file_name", "update_jak.php");
 $tpl->assign("current_theme", $current_theme);
 $tpl->assign("page_self", $_SERVER['PHP_SELF']);
 $tpl->assign("anon_questions", $anon_questions);
+$tpl->assign("question_count", $question_count);
 $tpl->assign("logged_in", $_SESSION['logged_in']);
 $tpl->assign("site_name", htmlspecialchars($site_name));
 $tpl->assign("user_gravatar_email", get_gravatar_url($user_gravatar_email, 48));

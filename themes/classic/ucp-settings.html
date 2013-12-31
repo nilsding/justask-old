@@ -5,6 +5,19 @@
 <button class="nature">Save</button>
 </form>
 
+<h4>API</h4>
+<table>
+<tr>
+<td><label for="jak_name">API Key</label></td>
+<td><input type="text" readonly="readonly" name="api_key" value="{$api_key}"></td>
+<td class="info">Some applications may use this key along with your user name.</td>
+</tr>
+</table>
+<form class="custom" method="POST" action="ucp.php?change=generate_api_key">
+<button>Generate new API key</button>
+</form>
+Developers may want to read the <a href="https://github.com/nilsding/justask/wiki/API-documentation">API Documentation</a> (work in progress).
+
 <h2>justask settings</h2>
 <p>These are settings for justask.</p>
 <form method="POST" action="ucp.php?change=justask">
@@ -33,6 +46,11 @@
 <td><label for="jak_anonymous_questions">Allow anonymous questions?</label></td>
 <td><input type="checkbox" name="jak_anonymous_questions"{$anon_questions ? ' checked' : ''}></td>
 <td class="info">Allow people to ask you anonymous questions</td>
+</tr>
+<tr>
+<td><label for="jak_show_id">Show User ID</label></td>
+<td><input type="checkbox" name="jak_show_id"{$show_id ? ' checked' : ''}></td>
+<td class="info">Show a (generated) user ID next to each name (where possible)</td>
 </tr>
 <tr>
 <td><label for="jak_theme">Theme:</label></td>
@@ -78,6 +96,11 @@
 <td><label for="callback">Callback URL:</label></td>
 <td><input type="text" name="callback" value="{$twitter_callback}"></td>
 <td class="info">The full URL to your <code>callback.php</code>.</td>
+</tr>
+<tr>
+<td><label for="default_check">Checkbox:</label></td>
+<td><input type="checkbox" name="default_check"{$twitter_check ? ' checked' : ''}></td>
+<td class="info">Is the "Post to Twitter" checkbox always checked?</td>
 </tr>
 </table>
 <button class="nature">Save</button>

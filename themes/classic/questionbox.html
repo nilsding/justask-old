@@ -16,5 +16,8 @@
 </div>
 {/if}<br />
 <button>Ask!</button>
+{if="$show_id"}
+<input type="hidden" name="asker_id" value="{$u_id}" />
+{/if}
 </form>
 </div>

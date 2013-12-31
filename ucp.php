@@ -13,6 +13,7 @@ if (file_exists('config.php')) {
   exit();
 }
 
+include_once 'fixDir.php';
 include_once 'gravatar.php';
 
 $shouldchangepassanduser = false;
@@ -42,12 +43,12 @@ if ($twitter_on) {
 }
 
 if (isset($_GET['change'])) {
+  if (!isset($_SESSION['logged_in']) || !isset($_SESSION['user'])) {
+    header('Location: ucp.php');
+    exit();
+  }
   switch ($_GET['change']) {
     case 'logindata':
-      if (!isset($_SESSION['logged_in']) || !isset($_SESSION['user'])) {
-        header('Location: ucp.php');
-        exit();
-      }
       if (!isset($_POST['username']) || !isset($_POST['passwd'])) {
         header('Location: ucp.php?p=account');
         exit();
@@ -135,6 +136,12 @@ if (isset($_GET['change'])) {
         $jak_theme = $sql->real_escape_string($_POST['jak_theme']);
       }
       
+      if (!isset($_POST['jak_show_id'])) {
+        $jak_show_id = false;
+      } else {
+        $jak_show_id = true;
+      }
+      
       $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . $sql->real_escape_string($jak_name) . '\' WHERE `config_id`=\'cfg_sitename\'; ';
 //       if (!$sql->query($sql_str)) {
 //         die('rip in pizza');
@@ -142,13 +149,15 @@ if (isset($_GET['change'])) {
       $sql->query($sql_str);
       $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . ($jak_gravatar ? "true" : "false") . '\' WHERE `config_id`=\'cfg_gravatar\'; ';
       $sql->query($sql_str);
-      $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . ($jak_anonymous_questions ? "true" : "false"). '\' WHERE `config_id`=\'cfg_anon_questions\';';
+      $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . ($jak_anonymous_questions ? "true" : "false") . '\' WHERE `config_id`=\'cfg_anon_questions\';';
       $sql->query($sql_str);
       $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . $jak_entriesperpage . '\' WHERE `config_id`=\'cfg_max_entries\';';
       $sql->query($sql_str);
       $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . ($twitter_on ? "true" : "false") . '\' WHERE `config_id`=\'cfg_twitter\';';
       $sql->query($sql_str);
       $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . $jak_theme . '\' WHERE `config_id`=\'cfg_currtheme\';';
+      $sql->query($sql_str);
+      $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . ($jak_show_id ? "true" : "false") . '\' WHERE `config_id`=\'cfg_show_user_id\';';
       $sql->query($sql_str);
       
       header('Location: ucp.php?p=account&m=1');
@@ -174,14 +183,31 @@ if (isset($_GET['change'])) {
           header('Location: ucp.php?p=account&m=3');
           exit();
       }
-
       break;
+      
+    case 'generate_api_key':
+      $api_key = substr(str_shuffle(str_repeat('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',5)),0,12);;
+      $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . $sql->real_escape_string($api_key) . '\' WHERE `config_id`=\'cfg_api_key\';';
+      if (!$sql->query($sql_str)) {
+        header('Location: ucp.php?p=account&m=7');
+        exit();
+      } else {
+        header('Location: ucp.php?p=account&m=6');
+        exit();
+      }
+      break;
+      
     case 'twitter_tokens':
       if (!$twitter_on) {
         header('Location: ucp.php?p=account&m=4');
         exit();
       }
      /* ck, cs, at, ats, callback */
+      if (!isset($_POST['default_check'])) {
+        $default_check = false;
+      } else {
+        $default_check = true;
+      }
 
     if (isset($_POST['ck'])) {
       $s = $sql->real_escape_string($_POST['ck']);
@@ -208,11 +234,46 @@ if (isset($_GET['change'])) {
       $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . $s . '\' WHERE `config_id`=\'cfg_twitter_callbk\';';
       $sql->query($sql_str);
     }
+    $sql_str = 'UPDATE `' . $MYSQL_TABLE_PREFIX . 'config` SET `config_value`=\'' . ($default_check ? "true" : "false") . '\' WHERE `config_id`=\'cfg_twitter_chk\';';
+    $sql->query($sql_str);
     
     header('Location: ucp.php?p=account&m=1');
     break;
+    
+    case 'tweet':    
+    if (!$twitter_on) {
+      header('Location: ucp.php?p=front&m=3');
+      exit();
+    }
+    
+    if (!isset($_POST['tweet_text'])) {
+      header('Location: ucp.php?p=front&m=7');
+      exit();
+    }
+    $tweet_text = trim($_POST['tweet_text']);
+    
+    $tweet_text_c = preg_replace("/http:\/\/([\w\.]*)/", "http://t.co/xxxxxxxxxx", $tweet_text);
+    $tweet_text_c = preg_replace("/https:\/\/([\w\.]*)/", "https://t.co/xxxxxxxxxx", $tweet_text_c);
+    
+    if (strlen($tweet_text_c) > 140) {
+      header('Location: ucp.php?p=front&m=6');
+      exit();
+    }
+    if (strlen($tweet_text_c) == 0) {
+      header('Location: ucp.php?p=front&m=7');
+      exit();
+    }
+    
+    $connection = new TwitterOAuth($twitter_ck, $twitter_cs, $twitter_at, $twitter_ats);
+    $res = $connection->post('statuses/update', array('status' => $tweet_text));
+    
+    if (isset($res->errors)) {
+      header('Location: ucp.php?p=front&m=5');
+      exit();
+    }
+    header('Location: ucp.php?p=front&m=4');
+    break;
   }
-//   header('Location: ucp.php');
   exit();
 }
 
@@ -260,12 +321,21 @@ $gravatar = ($res['config_value'] === 'true' ? true : false);
 $res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_anon_questions\'');
 $res = $res->fetch_assoc();
 $anon_questions = ($res['config_value'] === 'true' ? true : false);
+$res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_twitter_chk\'');
+$res = $res->fetch_assoc();
+$twitter_check = ($res['config_value'] === 'true' ? true : false);
 $res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_username\'');
 $res = $res->fetch_assoc();
 $user_name = $res['config_value'];
 $res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_user_gravatar\'');
 $res = $res->fetch_assoc();
 $user_gravatar_email = $res['config_value'];
+$res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_show_user_id\'');
+$res = $res->fetch_assoc();
+$show_user_id = ($res['config_value'] === "true" ? true : false);
+$res = $sql->query('SELECT `config_value` FROM `' . $MYSQL_TABLE_PREFIX . 'config` WHERE `config_id`=\'cfg_api_key\'');
+$res = $res->fetch_assoc();
+$api_key = $res['config_value'];
 
 $res = $sql->query('SELECT * FROM `' . $MYSQL_TABLE_PREFIX . 'inbox`');
 $question_count = $res->num_rows;
@@ -304,6 +374,14 @@ if (!isset($_GET['p'])) {
 } else {
   $page = $_GET['p'];
 }
+
+$url = "http";
+if (isset($_SERVER["HTTPS"])) {
+  if ($_SERVER["HTTPS"] == "on") {
+    $url .= 's';
+  }
+}
+$url .= "://" . $_SERVER['HTTP_HOST'] . fixDir();
 
 $last_page = 1;
 $add_params = "";
@@ -363,7 +441,9 @@ switch ($page) {
                                         "asker_gravatar" => get_gravatar_url($question['asker_gravatar'], 48),
                                    "question_time_asked" => htmlspecialchars(date('l jS F Y G:i', $question_time_asked)),
                                       "question_content" => str_replace("\n", "<br />", htmlspecialchars($question['question_content'])),
-                                           "question_id" => $question['question_id']));
+                                              "asker_id" => htmlspecialchars(strlen(trim($question['asker_id'])) == 0 ? "none" : $question['asker_id']),
+                                           "question_id" => $question['question_id'],
+                                         "asker_private" => $question['asker_private']));
       }
       for ($i = 0; $i < $last_page; $i++) {
         array_push($pages, "PAGE");
@@ -404,6 +484,7 @@ switch ($page) {
 
       while ($question = $res->fetch_assoc()) { 
         $question_time_answered = strtotime($question['answer_timestamp']);
+        $question_time_asked = strtotime($question['question_timestamp']);
         if ($question['asker_private']) {
           $question_asked_by = 'Anonymous';
         } else {
@@ -413,8 +494,11 @@ switch ($page) {
                                         "asker_gravatar" => get_gravatar_url($question['asker_gravatar'], 48),
                                            "answer_text" => str_replace("\n", "<br />", htmlspecialchars($question['answer_text'])),
                                 "question_time_answered" => htmlspecialchars(date('l jS F Y G:i', $question_time_answered)),
+                                   "question_time_asked" => htmlspecialchars(date('l jS F Y G:i', $question_time_asked)),
                                       "question_content" => str_replace("\n", "<br />", htmlspecialchars($question['question_content'])),
-                                             "answer_id" => $question['answer_id']));
+                                              "asker_id" => htmlspecialchars(strlen(trim($question['asker_id'])) == 0 ? "none" : $question['asker_id']),
+                                             "answer_id" => $question['answer_id'],
+                                         "asker_private" => $question['asker_private']));
       }
       for ($i = 0; $i < $last_page; $i++) {
         array_push($pages, "PAGE");
@@ -450,6 +534,12 @@ switch ($page) {
       case '5':
         $message = "Successfully connected with Twitter.";
         break;
+      case '6':
+        $message = "I have generated a new API key, just for you.";
+        break;
+      case '7':
+        $message = "Something went wrong.";
+        break;
       case '0':
       default:
         $is_message = false;
@@ -468,7 +558,7 @@ switch ($page) {
     
   case 'logout':
     session_destroy();
-    header('Location: ucp.php');
+    header('Location: index.php');
     exit();
     break;
   
@@ -484,7 +574,22 @@ switch ($page) {
         $message = "What the f- happened?";
         break;
       case '2':
-        $message = "<code>ucp.php</code> was renamed to <code>ucp.php</code>, please update your bookmarks!";
+        $message = "<code>usercfg.php</code> was renamed to <code>ucp.php</code>, please update your bookmarks!";
+        break;
+      case '3': 
+        $message = "To do that, you need to have The Twitter.";
+        break;
+      case '4': 
+        $message = "Successfully posted tweet!";
+        break;
+      case '5': 
+        $message = "There was a problem posting your tweet!";
+        break;
+      case '6': 
+        $message = "The tweet you were trying to send was longer than 140 characters.";
+        break;
+      case '7': 
+        $message = "The tweet you were trying to send was empty.";
         break;
       default:
         $is_message = false;
@@ -508,11 +613,13 @@ $menu = array(array("text" => "Main page", "url" => "ucp.php?p=front"),
 
 $tpl = new RainTPL;
 
+$tpl->assign("url", $url);
 $tpl->assign("pages", $pages);
 $tpl->assign("ucp_menu", $menu);
 $tpl->assign("themes", $themes);
 $tpl->assign("message", $message);
 $tpl->assign("pagenum", $pagenum);
+$tpl->assign("api_key", $api_key);
 $tpl->assign("answers", $responses);
 $tpl->assign("gravatar", $gravatar);
 $tpl->assign("current_page", $page);
@@ -520,6 +627,7 @@ $tpl->assign("file_name", "ucp.php");
 $tpl->assign("last_page", $last_page);
 $tpl->assign("questions", $questions);
 $tpl->assign("user_name", $user_name);
+$tpl->assign("show_id", $show_user_id);
 $tpl->assign("add_params", $add_params);
 $tpl->assign("is_message", $is_message);
 $tpl->assign("twitter_ck", $twitter_ck);
@@ -528,6 +636,7 @@ $tpl->assign("twitter_at", $twitter_at);
 $tpl->assign("twitter_on", $twitter_on);
 $tpl->assign("twitter_ats", $twitter_ats);
 $tpl->assign("answer_count", $answer_count);
+$tpl->assign("twitter_check", $twitter_check);
 $tpl->assign("current_theme", $current_theme);
 $tpl->assign("question_count", $question_count);
 $tpl->assign("page_self", $_SERVER['PHP_SELF']);

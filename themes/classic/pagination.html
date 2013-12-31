@@ -5,7 +5,7 @@
 <li><a href="{$page_self}?page={$pagenum == 1 ? 1 : $pagenum - 1}{$add_params}">‹</a></li>
 {/if}
 {loop="pages"}
-<li><a href="{$page_self}?page={$counter + 1}{$add_params}"{$pagenum == ($counter + 1) ? 'class="current-page"' : ''}>{$counter+1}</a></li>
+<li><a href="{$page_self}?page={$counter + 1}{$add_params}"{$pagenum == ($counter + 1) ? ' class="current-page"' : ''}>{$counter+1}</a></li>
 {/loop}
 {if="$pagenum < $last_page"}
 <li><a href="{$page_self}?page={$pagenum == $last_page ? $last_page : $pagenum + 1}{$add_params}">›</a></li>

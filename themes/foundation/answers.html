@@ -1,0 +1,53 @@
+{include="header"}
+<div class="row">
+  <div class="large-12 columns">
+    <div class="panel">
+      <h1>{$site_name}</h1>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+{include="left-sidebar"}
+  
+  <div class="large-9 columns">
+  
+{if="$is_message"}
+    <div data-alert class="alert-box">
+      {$message}
+      <a href="#" class="close">&times;</a>
+    </div>
+{/if}
+
+{include="questionbox"}
+
+<!-- Begin answers -->
+{loop="answers"}
+    <hr />
+    <div class="row">
+      <div class="large-2 columns small-2"><img class="max-48px" src="{$value.asker_gravatar}" /></div>
+      <div class="large-10 columns">
+        <p><strong>{$value.question_asked_by} asked:</strong><br />{$value.question_content}</p>
+        <ul class="inline-list">
+          <li style="color: #6f6f6f;">{$value.question_time_asked}</li>
+        </ul>
+      </div>
+    </div>
+    <div class="row">
+      <div class="large-2 columns small-2"><img class="max-48px" src="{$user_gravatar_email}" /></div>
+      <div class="large-10 columns">
+        <p><strong>{$user_name} responded:</strong><br />{$value.answer_text}</p>
+        <ul class="inline-list">
+          <li class="date-text">{$value.question_time_answered}</li>
+          <!--<li><a href="">Permalink</a></li>-->
+        </ul>
+      </div>
+    </div>
+{/loop}
+<!-- End answers -->
+    <div class="row">
+{include="pagination"}
+    </div>
+  </div>
+</div>
+{include="footer"}

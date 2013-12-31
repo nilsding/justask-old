@@ -4,6 +4,7 @@
  * © 2013 nilsding
  * License: AGPLv3, read the LICENSE file for the license text.
  */
+include('fixDir.php');
 session_start();
 if (isset($_GET['p'])) {
   $page = $_GET['p'];
@@ -120,7 +121,7 @@ if (!isset($_GET['jak_entriesperpage'])) {
 <td><input type="text" name="mysql_pass" value="password"></td>
 </tr>
 <tr>
-<td><label for="mysql_database">Server:</label></td>
+<td><label for="mysql_database">Database name:</label></td>
 <td><input type="text" name="mysql_database" value="database"></td>
 </tr>
 <tr>
@@ -173,12 +174,21 @@ $content .= "\$MYSQL_USER = \"" . $_GET['mysql_user'] . "\";\n";
 $content .= "\$MYSQL_PASS = \"" . $_GET['mysql_pass'] . "\";\n";
 $content .= "\$MYSQL_DATABASE = \"" . $_GET['mysql_database'] . "\";\n";
 $content .= "\$MYSQL_TABLE_PREFIX = \"" . $_GET['mysql_prefix'] . "\";\n";
+
+if(file_put_contents('./config.php', $content)) {
+?>
+<p>We've created your config file. You are almost ready to go.</p>
+<?php
+} else {
 ?>
 <textarea rows="10" cols="60">
 <?php echo $content; ?>
 </textarea>
 <p>Please copy and paste the contents of the above box into a new file which is named config.php.<br />
-(This step will be automated in near future.)</p>
+If your config-file would've been writable, we'd done this for you.</p>
+<?php
+}
+?>
 <input type="hidden" name="p" value="finish_2">
 <button>Next step</button>
 </form>
@@ -209,13 +219,16 @@ case "finish_2": ?>
     echo "<p>Please check your MySQL user/pass/server/whatever.</p>";
     echo "<p>Oh and please ignore the following errors, if any. Thanks! :3</p>";
   }
-  
-  $JUSTASK_CONFIG_VERSION = 3;
+
+  //TODO: change this ALWAYS to the latest version. and don't forget to change the other code.
+  $JUSTASK_CONFIG_VERSION = 8;
   
   /* default twitter consumer keys */
+
+
   $JUSTASK_TWITTER_CK = "ABr5S6jAB4RQYFYWm5Sq";
   $JUSTASK_TWITTER_CS = "ICM7eKAlu6PSPysQr7Sim0uFT4HoqK7d5asEpW1Qd6";
-  $JUSTASK_TWITTER_CALLBACK = "http://" . $_SERVER['HTTP_HOST'] . "/callback.php";
+  $JUSTASK_TWITTER_CALLBACK = "http://" . $_SERVER['HTTP_HOST'] . fixDir() . "/callback.php";
   
   echo "<p>Creating config table...</p>";
   
@@ -246,7 +259,7 @@ case "finish_2": ?>
   $sql_str = 'INSERT INTO `' . $MYSQL_TABLE_PREFIX . 'config` (`config_id`, `config_value`) VALUES (\'cfg_sitename\', \'' . $sql->real_escape_string($_SESSION['jak_name']) . '\'), (\'cfg_gravatar\', \'' . ($_SESSION['jak_gravatar'] ? "true" : "false") . 
     '\'), (\'cfg_anon_questions\', \'' . ($_SESSION['jak_anonymous_questions'] ? "true" : "false") . '\'), (\'cfg_max_entries\', \'' . $_SESSION['jak_entriesperpage'] . '\'), (\'cfg_twitter\', \'' . ($_SESSION['jak_twitter_on'] ? "true" : "false") . 
     '\'), (\'cfg_twitter_ck\', \'' . strrev($JUSTASK_TWITTER_CK) . '\'), (\'cfg_twitter_cs\', \'' . strrev($JUSTASK_TWITTER_CS) . '\'), (\'cfg_twitter_at\', \'\'), (\'cfg_twitter_ats\', \'\'), (\'cfg_twitter_callbk\', \'' . $sql->real_escape_string($JUSTASK_TWITTER_CALLBACK) . 
-    '\'), (\'cfg_currtheme\', \'classic\');';
+    '\'), (\'cfg_currtheme\', \'classic\'), (\'cfg_twitter_chk\', \'true\');';
   
   if (!$sql->query($sql_str)) {
     if ($sql->errno != 1062) { // errno 1062 = Duplicate entry 'blah' for key 'PRIMARY'
@@ -321,8 +334,8 @@ case "finish_2": ?>
   $sql_str = 'CREATE TABLE IF NOT EXISTS `' . $MYSQL_TABLE_PREFIX . 'inbox` (`question_id` int(11) NOT NULL AUTO_INCREMENT, ' . 
     '`question_content` text COLLATE utf8_unicode_ci NOT NULL, `asker_name` varchar(100) COLLATE utf8_unicode_ci NOT NULL, ' .
     '`asker_gravatar` varchar(100) COLLATE utf8_unicode_ci NOT NULL, `asker_private` tinyint(1) NOT NULL, ' .
-    '`question_timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`question_id`)) DEFAULT CHARSET=utf8 ' .
-    'COLLATE=utf8_unicode_ci AUTO_INCREMENT=1 ;';
+    '`question_timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP, `asker_id` text COLLATE utf8_unicode_ci NOT NULL, ' .
+    'PRIMARY KEY (`question_id`)) DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1 ;';
   
   if (!$sql->query($sql_str)) {
     echo "<p>The query <code>$sql_str</code> failed! :(</p>";
@@ -335,7 +348,8 @@ case "finish_2": ?>
     '`question_content` text COLLATE utf8_unicode_ci NOT NULL, `asker_name` varchar(100) COLLATE utf8_unicode_ci NOT NULL, ' . 
     '`asker_gravatar` varchar(100) COLLATE utf8_unicode_ci NOT NULL, `asker_private` tinyint(1) NOT NULL, `question_timestamp` ' . 
     'datetime NOT NULL, `answer_timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,`answer_text` text COLLATE utf8_unicode_ci NOT NULL, ' . 
-    'PRIMARY KEY (`answer_id`) ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1 ;';
+    '`asker_id` text COLLATE utf8_unicode_ci NOT NULL, PRIMARY KEY (`answer_id`) ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci ' .
+    'AUTO_INCREMENT=1 ;';
     
   if (!$sql->query($sql_str)) {
     echo "<p>The query <code>$sql_str</code> failed! :(</p>";
@@ -347,7 +361,24 @@ case "finish_2": ?>
   <?php
 }
 ?>
-<?php  } ?>
+<?php  
+break;
+case 'config_already_exists': 
+include_once 'config.php';
+$sql = mysqli_connect($MYSQL_SERVER, $MYSQL_USER, $MYSQL_PASS, $MYSQL_DATABASE);
+?>
+<p>The <code>config.php</code> file already exists.</p> 
+<?php
+if ($sql->connect_errno) {
+  echo "<p>However, the connection to the database could not be made because of reasons.</p>";
+  echo "<p>The error was <strong>". $sql->connect_error ."</strong> (" . $sql->connect_errno . ") </p>";
+  echo "<p>Please edit the config.php file again or delete it and run the installer again.</p>";
+} else {
+  echo "<p>The database connection seems to work, too.</p>";
+}
+?>
+<?php
+break; } ?>
 <hr />
 <div class="footer">
 <p style="font-size: small;"><?php echo (isset($_SESSION['jak_name']) ? $_SESSION['jak_name'] : "This page"); ?> is running <a href="https://github.com/nilsding/justask">justask</a>, which is

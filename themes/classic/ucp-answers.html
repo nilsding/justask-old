@@ -8,12 +8,13 @@
 <div class="question">
 <img class="asker-gravatar" src="{$value.asker_gravatar}" alt="{$value.question_asked_by}"/>
 <div class="question-text">
-<div class="question-timestamp">{$value.question_time_answered}</div>
-<div class="question-user-asked">{$value.question_asked_by}</div>
+<div class="question-timestamp">{$value.question_time_asked}</div>
+<div class="question-user-asked">{$value.question_asked_by}{if="$show_id"}</strong> (ID: {$value.asker_id})<strong>{/if} asked:</div>
 <div class="question-content">{$value.question_content}</div>
 </div><br />
 <img class="asker-gravatar" src="{$user_gravatar_email}" alt="{$user_name}"/>
 <div class="question-text">
+<div class="question-timestamp">{$value.question_time_answered}</div>
 <div class="question-user-answered">{$user_name} responded:</div>
 <div class="answer-content">{$value.answer_text}</div>
 </div>
