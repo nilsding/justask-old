@@ -1,6 +1,11 @@
 # justask
-justask is more or less something like [Formspring](http://formspring.me) or [Ask.fm](http://ask.fm), except it's single-user only.
+justask is more or less something like [Formspring](http://formspring.me) or [Ask.fm](http://ask.fm), except it's single-user only.  
 Think of it as viewing an user on one of these platforms
+
+## → READ THIS BIT ←
+I, @nilsding, have stopped working on justask already about 8 months ago (July 2013).  I'm currently focusing on the development of justask's successor, justask2.
+
+So, if you want to extend justask, feel free to fork this repo and make pull requests.  Patches welcome.
 
 ## Features
 * Answer questions
