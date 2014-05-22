@@ -233,32 +233,36 @@ switch ($config_version) {
     $content .= "Perfect.</p>";
 }
 
-include 'gravatar.php';
-include 'include/rain.tpl.class.php';
+if (!isset($installer)) {
+    include 'gravatar.php';
+    include 'include/rain.tpl.class.php';
 
-raintpl::configure("base_url", null);
-raintpl::configure("path_replace", false);
-raintpl::configure("tpl_dir", "themes/$current_theme/");
 
-$tpl = new RainTPL;
+    raintpl::configure("base_url", null);
+    raintpl::configure("path_replace", false);
+    raintpl::configure("tpl_dir", "themes/$current_theme/");
 
-$tpl->assign("content", $content);
-$tpl->assign("current_page", "justask Updater");
+    $tpl = new RainTPL;
 
-/* everywhere variables */
-$tpl->assign("message", "");
-$tpl->assign("is_message", false);
-$tpl->assign("gravatar", $gravatar);
-$tpl->assign("user_name", $user_name);
-$tpl->assign("file_name", "update_jak.php");
-$tpl->assign("current_theme", $current_theme);
-$tpl->assign("page_self", $_SERVER['PHP_SELF']);
-$tpl->assign("anon_questions", $anon_questions);
-$tpl->assign("question_count", $question_count);
-$tpl->assign("logged_in", $_SESSION['logged_in']);
-$tpl->assign("site_name", htmlspecialchars($site_name));
-$tpl->assign("user_gravatar_email", get_gravatar_url($user_gravatar_email, 48));
+    $tpl->assign("content", $content);
+    $tpl->assign("current_page", "justask Updater");
 
-$tpl->draw("generic");
+    /* everywhere variables */
+    $tpl->assign("message", "");
+    $tpl->assign("is_message", false);
+    $tpl->assign("gravatar", $gravatar);
+    $tpl->assign("user_name", $user_name);
+    $tpl->assign("file_name", "update_jak.php");
+    $tpl->assign("current_theme", $current_theme);
+    $tpl->assign("page_self", $_SERVER['PHP_SELF']);
+    $tpl->assign("anon_questions", $anon_questions);
+    $tpl->assign("question_count", $question_count);
+    $tpl->assign("logged_in", $_SESSION['logged_in']);
+    $tpl->assign("site_name", htmlspecialchars($site_name));
+    $tpl->assign("user_gravatar_email", get_gravatar_url($user_gravatar_email, 48));
 
+    $tpl->draw("generic");
+} else {
+    echo $content;
+}
 ?>

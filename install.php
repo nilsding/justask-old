@@ -356,6 +356,10 @@ case "finish_2": ?>
     echo "<p>The error was: (" . $sql->errno . ") " . $sql->error . "</p>";
   }
   
+  echo "<p>performing some updates</p>";
+  $installer = true;
+  require_once 'update_jak.php';
+  
   ?>
   <p>If no errors occurred, installation is almost complete! You may now want to delete the install.php file, as it's not needed anymore, and head over to <a href="ucp.php">ucp</a>, the main control panel (and for now your inbox).</p>
   <?php
